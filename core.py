@@ -46,6 +46,7 @@ while not game.winner and not error:
             print(game.showBoard())
             player.send(game.showBoard())
             data = thread(1, player.listen)()
+            print(''.join(thread(0.01, player.logs, wait=True, otherwise='Nothing to show')()))
             errorIf(data == '')
             print('{0}: {1} ({2})'.format(player.name, data, time()-start))
             try:
@@ -65,7 +66,7 @@ while not game.winner and not error:
             if type(E) == ErrorWithMessage:
                 error = E.msg
             else:
-                error = "Internal player error"#player.error()
+                error = "Internal player error"
             print("===============", player.name)
             print(error)
             print("=============== AFTER:", time()-start)
@@ -74,7 +75,7 @@ while not game.winner and not error:
 for player in (player1, player2):
     print('')
     print(player.name)
-    print(''.join(thread(1, player.logs, wait=True, otherwise='Nothing to show')()))
+    print(''.join(thread(1, player.error, otherwise='Nothing to show')()))
 
 print(game.showBoard())
 print('\nWinner: {0}'.format(game.winner))

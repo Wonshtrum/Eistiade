@@ -20,8 +20,17 @@ def thread(maxTime, f, wait=False, otherwise=None):
         if wait:
             sleep(maxTime)
             proc.terminate()
-            if queue.qsize():
-                return [queue.get() for _ in range(queue.qsize())]
+            size = queue.qsize()
+            if size:
+                res = []
+                for _ in range(size):
+                    try:
+                        #TODO prevent overflow deadlock
+                        res.append(queue.get(block=False))
+                    except:
+                        res+="\n-- DATA UNAVAILABLE IN TIME --\n[AT LEAST {} LINES SKIPPED]\n".format(size - _)
+                        break
+                return res
             else:
                 return otherwise
         else:
