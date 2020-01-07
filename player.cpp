@@ -9,9 +9,9 @@ int main() {
 		std::string line;
 		for (int i = 0 ; i<6 ; i++) {
 			getline(std::cin, line);
-			std::cerr << "> " << line << std::endl;
+			//std::cerr << "> " << line << std::endl;
 		}
-		std::cerr << std::endl;
+		//std::cerr << std::endl;
 		std::cout << 0 << std::endl;
 	}
 	return 0;

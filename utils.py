@@ -28,7 +28,7 @@ def thread(maxTime, f, wait=False, otherwise=None):
                         #TODO prevent overflow deadlock
                         res.append(queue.get(block=False))
                     except:
-                        res+="\n-- DATA UNAVAILABLE IN TIME --\n[AT LEAST {} LINES SKIPPED]\n".format(size - _)
+                        res.append("\n-- DATA UNAVAILABLE IN TIME --\n[AT LEAST {} LINES SKIPPED]\n".format(size - _))
                         break
                 return res
             else:
@@ -40,7 +40,7 @@ def thread(maxTime, f, wait=False, otherwise=None):
                 return res
             except:
                 proc.terminate()
-                if not otherwise:
+                if otherwise is None:
                     raise ErrorWithMessage('Timeout!')
                 else:
                     return otherwise
