@@ -6,28 +6,33 @@ lock = RLock()
 class Worker(Thread):
     def __init__(self, workerId):
         self.arg = None
-        self.worked = False
         self.id = workerId
     def run(self):
-        self.worked = True
-        for i in range(5):
-            sleep(1)
-            print(self.id, self.arg)
-        self.finish()
-    def finish(self):
+        start = time()
+        self.process()
         with lock:
-            print("FINISH", self.id, self.arg)
+            print("FINISH", self.id, self.arg, time()-start)
             with sql.connect('link.db') as conn:
                 conn.isolation_level = None
-                cursor = conn.cursor()
-                cursor.execute('UPDATE USER SET state = 2 WHERE id = {}'.format(self.arg))
+                self.terminate(conn.cursor())
         self.arg = None
+    def process(self):
+        raise Exception
+    def terminate(self, cursor):
+        raise Exception
     def work(self, arg):
         if self.arg is not None:
             return
         self.arg = arg
         Thread.__init__(self)
         self.start()
+
+def newProcess(self):
+    sleep(5)
+def newTerminate(self, cursor):
+    cursor.execute('UPDATE REQUEST SET state = 2 WHERE id = {}'.format(self.arg))
+Worker.process = newProcess
+Worker.terminate = newTerminate
 
 class WorkerManager:
     def __init__(self, nbWorkers):
@@ -40,7 +45,7 @@ class WorkerManager:
                 return True
         return False
 
-factory = WorkerManager(5)
+factory = WorkerManager(1)
 
 with sql.connect('link.db') as conn:
     conn.isolation_level = None
@@ -48,12 +53,11 @@ with sql.connect('link.db') as conn:
     cursor = conn.cursor()
     while True:
         sleep(2)
-        print('POLLING...')
-        cursor.execute('SELECT * FROM USER WHERE state = 0')
+        cursor.execute('SELECT * FROM REQUEST WHERE state = 0')
         lines = cursor.fetchall()
-        print(lines)
+        print("Polling[{}]".format(len(lines)))
         with lock:
             for line in lines:
                 if factory.newWork(line[0]):
-                    cursor.execute('UPDATE USER SET state = 1 WHERE id = {}'.format(line[0]))
+                    cursor.execute('UPDATE REQUEST SET state = 1 WHERE id = {}'.format(line[0]))
                     print(line[0])

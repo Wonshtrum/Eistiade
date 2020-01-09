@@ -2,15 +2,15 @@
 /////////////////////////////////////////////
 //                 INIT                    //
 /////////////////////////////////////////////
-let express    = require("express");
-let bodyParser = require("body-parser");
-let sqlite3    = require('sqlite3').verbose();
-let fs         = require('fs');
-let app        = express();
-let __web      = __dirname.slice(0, __dirname.lastIndexOf('/'));
-let __root     = __web.slice(0, __web.lastIndexOf('/'));
-let __client   = __web + '/client';
-let __db       = __root + '/db';
+const express    = require("express");
+const bodyParser = require("body-parser");
+const sqlite3    = require('sqlite3').verbose();
+const fs         = require('fs');
+const app        = express();
+const __web      = __dirname.slice(0, __dirname.lastIndexOf('/'));
+const __root     = __web.slice(0, __web.lastIndexOf('/'));
+const __client   = __web + '/client';
+const __db       = __root + '/db';
 console.log(__root);
 
 
@@ -27,8 +27,13 @@ app.get('/', function(req, res) {
 app.post('/', function(req, res) {
 	res.sendFile(__client + '/index.html');
 	console.log(req.body.code);
-	db.run('INSERT INTO USER(code, state) VALUES(?, ?)', [req.body.code, 0]);
+	db.run('INSERT INTO REQUEST(code, state) VALUES(?, ?)', [req.body.code, 0]);
 })
+app.get('/db', function(req, res) {
+	db.all('SELECT * FROM REQUEST', function(err, data) {
+		res.send(data);
+	});
+});
 
 app.listen(8080);
 console.log('Server started.');
@@ -37,22 +42,13 @@ console.log('Server started.');
 /////////////////////////////////////////////
 //                   DB                    //
 /////////////////////////////////////////////
-let dbFile = __db + '/link.db';
+const dbFile = __db + '/link.db';
 fs.unlinkSync(dbFile);
-let db = new sqlite3.Database(dbFile);
+const db = new sqlite3.Database(dbFile);
 //db.run('PRAGMA journal_mode=WAL')
 
 db.serialize(function() {
-	db.run('CREATE TABLE USER (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT, state INTEGER)');
-	/*let stmt = db.prepare('INSERT INTO lorem VALUES (?)');
-	for (let i = 0; i < 10; i++) {
-	stmt.run('Ipsum ' + i);
-	}
-	stmt.finalize();
-
-	db.each('SELECT rowid AS id, info FROM lorem', function(err, row) {
-	console.log(row.id + ': ' + row.info);
-	});*/
+	db.run('CREATE TABLE REQUEST (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT, state INTEGER)');
 });
 
 //db.close();

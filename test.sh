@@ -1,1 +1,1 @@
-core/core.py players/player.exe players/player.py
+sudo core/core.py players/player.exe players/player.py
