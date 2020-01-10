@@ -27,8 +27,8 @@ app.get('/', function(req, res) {
 app.post('/', function(req, res) {
 	res.sendFile(__client + '/index.html');
 	console.log(req.body.code);
-	let [ai1, ai2] = req.body.code.split(' ');
-	db.run('INSERT INTO REQUEST(cmd, arg0, arg1, state) VALUES(?, ?, ?, ?)', [2, ai1, ai2, 0]);
+	let [cmd, arg0, arg1, arg2] = req.body.code.split('\r\n\r\n');
+	db.run('INSERT INTO REQUEST(cmd, arg0, arg1, arg2, state) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, 0]);
 })
 app.get('/db', function(req, res) {
 	db.all('SELECT * FROM REQUEST', function(err, data) {
@@ -51,7 +51,7 @@ const db = new sqlite3.Database(dbFile);
 db.serialize(function() {
 	db.run('CREATE TABLE REQUEST (id INTEGER PRIMARY KEY AUTOINCREMENT, cmd INTEHER, arg0 TEXT, arg1 TEXT, arg2 TEXT, state INTEGER)');
 	/*  send: [0, fileName, fileType, code]
-	 *     -> [0, exitCode, logs    , None]
+	 *     -> [0, exitCode, log     , None]
 	 *   set: [1, fileName, None    , None]
 	 *     -> [1, exitCode, None    , None]
 	 * fight: [2, fileName, fileName, None]
