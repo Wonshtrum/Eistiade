@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import sqlite3 as sql
 
 with sql.connect('link.db') as conn:
