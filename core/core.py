@@ -8,13 +8,13 @@ from game import Game
 from traceback import print_exc as stackException
 
 class Player:
-    def __init__(self, path, id):
+    def __init__(self, cmd, name, id):
         self.id = id
-        self.name = 'IA[{0}, {1}]'.format(id, path)
-        self.proc = sp.Popen('sudo -u nobody ./{0}'.format(path), shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
+        self.name = 'IA[{}, {}]'.format(id, name)
+        self.proc = sp.Popen(cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
         self.logHistory = []
     def send(self, data):
-        self.proc.stdin.write('{0}\n'.format(data).encode())
+        self.proc.stdin.write('{}\n'.format(data).encode())
         self.proc.stdin.flush()
     def listen(self):
         return self.proc.stdout.readline().decode()[:-1]
@@ -45,9 +45,9 @@ class Player:
 #========================================#
 #                  MAIN                  #
 #========================================#
-def main(ai1, ai2):
-    player1 = Player(ai1, 1)
-    player2 = Player(ai2, 2)
+def fight(cmd1, cmd2, ai1 = 'default1', ai2 = 'default2'):
+    player1 = Player(cmd1, ai1, 1)
+    player2 = Player(cmd2, ai2, 2)
     player1.send('1')
     player2.send('2')
 
@@ -69,7 +69,7 @@ def main(ai1, ai2):
                 finally:
                     player.logEntry(' AFTER: {}\n'.format(time()-start))
                     player.collectLogs()
-                print('{0}: {1} ({2})'.format(player.name, data, time()-start))
+                print('{}: {} ({})'.format(player.name, data, time()-start))
                 try:
                     game.play(player.id, data)
                 except Exception as E:
@@ -95,8 +95,8 @@ def main(ai1, ai2):
 
     print('\n\n[FINAL STATE] ==============================================')
     print(game.showBoard())
-    print('\nWinner: {0}'.format(game.winner))
-    return (player1, player2)
+    print('\nWinner: {}'.format(game.winner))
+    return (game, player1, player2)
 
 if __name__ == '__main__':
-    main(argv[1], argv[2])
+    fight(argv[1], argv[2])

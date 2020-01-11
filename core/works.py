@@ -1,8 +1,8 @@
 from time import sleep
-from core import *
+from core import fight
 from os import system as bash, mkdir
 
-NULL = ''
+NULL = None
 playersDir = '../players'
 players = {}
 secret = 'amlkjfazmlncaezvapzkjb'
@@ -17,17 +17,17 @@ specs = {
         'java'    : ('{}.java' , 'javac {}'        , 'java {}.class' ),
         'scala'   : ('{}.scala', 'scalac {}'       , 'scala {}.class'),
         }
-def language(lang):
-    specsLang = specs[lang]
-    class res:
-        def source(fileId):
-            return specsLang[0].format(fileId)
-        def compile(fileId):
-            return specsLang[1].format(res.source(fileId), fileId)
-        def execute(fileId):
-            return specsLang[2].format(fileId)
-    return res
-    
+def sourceFile(fileName):
+    fileId, fileType = players[fileName]
+    return specs[fileType][0].format(fileId)
+def compileFile(fileName):
+    fileId, fileType = players[fileName]
+    return specs[fileType][1].format(sourceFile(fileName), fileId)
+def executeFile(fileName):
+    fileId, fileType = players[fileName]
+    fileDir  = '{}/{}'.format(playersDir, fileId)
+    cmd = specs[fileType][2].format(fileId)
+    return 'cd {} && sudo -u nobody {}'.format(fileDir, cmd)
 
 class Work:
     def routine(self):
@@ -44,19 +44,19 @@ class Send(Work):
         if self.fileName in players:
             return [1, 'FileName already exist']
         fileId   = genFileId(self.fileName)
-        fileName = language(self.fileType).source(fileId)
+        players[self.fileName] = (fileId, self.fileType)
+        fileName = sourceFile(self.fileName)
         fileDir  = '{}/{}'.format(playersDir, fileId)
         filePath = '{}/{}'.format(fileDir, fileName)
-        players[self.fileName] = (fileId, self.fileType)
 
         mkdir(fileDir)
-        bash('touch {}'.format(filePath))
         with open(filePath, 'w') as f:
             f.write(self.code)
 
-        compileCmd = language(self.fileType).compile(fileId)
+        compileCmd = compileFile(self.fileName)
         if compileCmd:
             bash('cd {} && {}'.format(fileDir, compileCmd))
+        bash('chmod -R 777 {}'.format(fileDir))
 
         exitCode = 0
         logs = filePath
@@ -82,11 +82,17 @@ class Fight(Work):
     def __init__(self, arg0, arg1, arg2):
         self.ai1, self.ai2 = arg0, arg1
     def routine(self):
-        sleep(7)
+        if self.ai1 not in players:
+            return [-1, 'AI1, {}, doesn\'t exist'.format(self.ai1)]
+        if self.ai2 not in players:
+            return [-1, 'AI2, {}, doesn\'t exist'.format(self.ai2)]
         print('Fight', self.ai1, self.ai2)
-        result = 1
-        log1 = 'LOG1'
-        log2 = 'LOG2'
+
+        game, ai1, ai2 = fight(executeFile(self.ai1), executeFile(self.ai2), players[self.ai1][0], players[self.ai2][0])
+
+        result = game.winner
+        log1 = ''.join(ai1.logHistory)
+        log2 = ''.join(ai2.logHistory)
         return [result, log1, log2]
 
 workList = [Send, Set, Fight]

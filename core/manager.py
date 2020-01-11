@@ -21,7 +21,7 @@ class Worker(Thread):
             with sql.connect(self.dbFile) as conn:
                 conn.isolation_level = None
                 cursor = conn.cursor()
-                cursor.execute('UPDATE REQUEST SET state = 2, arg0 = "{}", arg1 = "{}", arg2 = "{}" WHERE id = {}'.format(arg0, arg1, arg2, self.requestId))
+                cursor.execute('UPDATE REQUEST SET state = 2, arg0 = ?, arg1 = ?, arg2 = ? WHERE id = ?', (str(arg0), arg1, arg2, self.requestId))
                 #cursor.execute('UPDATE REQUEST SET state = 2 WHERE id = {}'.format(self.requestId))
         self.working = False
     def give(self, requestId, work):
