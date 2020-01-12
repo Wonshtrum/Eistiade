@@ -53,3 +53,15 @@ def errorIf(predicat, error=Exception):
 def errorIfNot(predicat, error=Exception):
     if not predicat:
         raise error
+
+def errorHandling(f):
+    def wrapper(*args, **kwargs):
+        try:
+            f(*args, **kwargs)
+            return [0, '']
+        except Exception as E:
+            if type(E) == ErrorWithMessage:
+                return [1, E.msg]
+            else:
+                return [1, str(E)]
+    return wrapper

@@ -1,17 +1,15 @@
 #!/usr/bin/python3
 
-import subprocess as sp
-from multiprocessing import Process, Queue
+from subprocess import Popen, PIPE
 from sys import argv
 from utils import *
 from game import Game
-from traceback import print_exc as stackException
 
 class Player:
-    def __init__(self, cmd, name, id):
+    def __init__(self, ai, id):
         self.id = id
-        self.name = 'IA[{}, {}]'.format(id, name)
-        self.proc = sp.Popen(cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
+        self.name = 'IA[{}, {}]'.format(id, ai.name)
+        self.proc = Popen(ai.execute(), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.logHistory = []
     def send(self, data):
         self.proc.stdin.write('{}\n'.format(data).encode())
@@ -45,9 +43,9 @@ class Player:
 #========================================#
 #                  MAIN                  #
 #========================================#
-def fight(cmd1, cmd2, ai1 = 'default1', ai2 = 'default2'):
-    player1 = Player(cmd1, ai1, 1)
-    player2 = Player(cmd2, ai2, 2)
+def fight(ai1, ai2):
+    player1 = Player(ai1, 1)
+    player2 = Player(ai2, 2)
     player1.send('1')
     player2.send('2')
 
@@ -99,4 +97,10 @@ def fight(cmd1, cmd2, ai1 = 'default1', ai2 = 'default2'):
     return (game, player1, player2)
 
 if __name__ == '__main__':
-    fight(argv[1], argv[2])
+    class AIdemo:
+        def __init__(self, cmd):
+            self.name = 'demo'
+            self.cmd = cmd
+        def execute(self):
+            return self.cmd
+    fight(AIdemo(argv[1]), AIdemo(argv[2]))
