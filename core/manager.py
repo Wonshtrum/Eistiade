@@ -15,14 +15,13 @@ class Worker(Thread):
         self.work = None
     def run(self):
         start = time()
-        arg0, arg1, arg2 = self.work.process()
+        exitCode, arg0, arg1, arg2 = self.work.process()
         with lock:
             print('FINISH', self.id, time()-start)
             with sql.connect(self.dbFile) as conn:
                 conn.isolation_level = None
                 cursor = conn.cursor()
-                cursor.execute('UPDATE REQUEST SET state = 2, arg0 = ?, arg1 = ?, arg2 = ? WHERE id = ?', (str(arg0), arg1, arg2, self.requestId))
-                #cursor.execute('UPDATE REQUEST SET state = 2 WHERE id = {}'.format(self.requestId))
+                cursor.execute('INSERT INTO Results VALUES(?, ?, ?, ?, ?)', (self.requestId, exitCode, arg0, arg1, arg2))
         self.working = False
     def give(self, requestId, work):
         if self.working:
@@ -44,23 +43,28 @@ class WorkerManager:
                 return True
         return False
 
-def polling(dbFile, nbWorkers):
-    factory = WorkerManager(nbWorkers, dbFile)
-    with sql.connect(dbFile) as conn:
+def polling(dbCoreFile, dbWebFile, nbWorkers):
+    factory = WorkerManager(nbWorkers, dbCoreFile)
+    with sql.connect(dbWebFile, uri=True) as conn:
         conn.isolation_level = None
-        conn.execute('PRAGMA journal_mode = WAL')
         cursor = conn.cursor()
-        cursor.execute('UPDATE REQUEST SET state = 0')
+        cursor.execute("PRAGMA journal_mode")
+        print(cursor.fetchone())
+        lastIndex = 0
         while True:
             sleep(2)
-            cursor.execute('SELECT * FROM REQUEST WHERE state = 0')
+            cursor.execute('SELECT * FROM Requests WHERE id > ?', (lastIndex,))
             lines = cursor.fetchall()
             print("Polling[{}]".format(len(lines)))
-            with lock:
-                for line in lines:
-                    if factory.newWork(line[0], work(line)):
-                        cursor.execute('UPDATE REQUEST SET state = 1 WHERE id = {}'.format(line[0]))
-                        print(line[0])
+            for line in lines:
+                if factory.newWork(line[0], work(line)):
+                    lastIndex = line[0]
+                    print(line[0])
+                else:
+                    break
 
 if __name__ == '__main__':
-    polling('../db/link.db', 2)
+    dbDir = '../db'
+    dbCoreFile = '{}/coreSide.db'.format(dbDir)
+    dbWebFile = '{}/webSide.db'.format(dbDir)
+    polling(dbCoreFile, dbWebFile, 2)

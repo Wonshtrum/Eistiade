@@ -4,11 +4,12 @@ from ai import AI
 
 class Work:
     NULL = None
+    nbArgs = 4
     def routine(self):
         raise Exception
     def process(self):
         args = self.routine()
-        args.extend([Work.NULL]*(3-len(args)))
+        args.extend([Work.NULL]*(Work.nbArgs-len(args)))
         return args
 
 class Send(Work):
@@ -58,5 +59,5 @@ class Fight(Work):
 
 workList = [Send, Set, Fight]
 def work(line):
-    requestId, workId, arg0, arg1, arg2, status = line
+    requestId, workId, arg0, arg1, arg2 = line
     return workList[workId](arg0, arg1, arg2)

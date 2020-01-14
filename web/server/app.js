@@ -28,12 +28,18 @@ app.post('/', function(req, res) {
 	//res.sendFile(__client + '/index.html');
 	console.log(req.body.code);
 	let [cmd, arg0, arg1, arg2] = req.body.code.split('\r\n\r\n');
-	//db.run('INSERT INTO REQUEST(cmd, arg0, arg1, arg2, state) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, 0]);
-	let stmt = db.prepare('INSERT INTO REQUEST(cmd, arg0, arg1, arg2, state) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, 0]);
+	let stmt = dbWeb.prepare('INSERT INTO Requests(cmd, arg0, arg1, arg2) VALUES(?, ?, ?, ?)', [cmd, arg0, arg1, arg2]);
 	listenDb(stmt, line => {console.log('end', line); res.send(line)});
 })
-app.get('/db', function(req, res) {
-	db.all('SELECT * FROM REQUEST', function(err, data) {
+app.get('/dbCore', function(req, res) {
+	dbCore.all('SELECT * FROM Results', function(err, data) {
+		console.log(err, data);
+		res.send(data);
+	});
+});
+app.get('/dbWeb', function(req, res) {
+	dbWeb.all('SELECT * FROM Requests', function(err, data) {
+		console.log(err, data);
 		res.send(data);
 	});
 });
@@ -45,16 +51,13 @@ console.log('Server started.');
 /////////////////////////////////////////////
 //                   DB                    //
 /////////////////////////////////////////////
-const dbFile = __db + '/link.db';
-fs.unlinkSync(dbFile);
-const db = new sqlite3.Database(dbFile);
-//db.isolationLevel = 0;
-db.run('PRAGMA journal_mode=WAL')
-
-db.run('CREATE TABLE REQUEST (id INTEGER PRIMARY KEY AUTOINCREMENT, cmd INTEHER, arg0 TEXT, arg1 TEXT, arg2 TEXT, state INTEGER)');
+const dbCoreFile = __db + '/coreSide.db';
+const dbWebFile = __db + '/webSide.db';
+const dbCore = new sqlite3.Database(dbCoreFile, sqlite3.OPEN_READONLY);
+const dbWeb = new sqlite3.Database(dbWebFile, sqlite3.OPEN_READWRITE);
 
 let _listenDb = function() {
-	db.serialize(function() {
+	dbCore.serialize(function() {
 		for (let [i, req] of Object.entries(listenDb.queue).reverse()) {
 			req.stmt.reset()
 			req.stmt.get(function(err, data) {
@@ -67,7 +70,7 @@ let _listenDb = function() {
 			});
 		}
 	});
-	if (listenDb.queue) {
+	if (listenDb.queue.length) {
 		setTimeout(_listenDb, 2000);
 	} else {
 		listenDb.active = false;
@@ -76,7 +79,7 @@ let _listenDb = function() {
 
 let listenDb = function(inStmt, callback, outStmt) {
 	inStmt.run();
-	outStmt = outStmt || db.prepare('SELECT * FROM REQUEST WHERE id = ? AND state = 2', ++listenDb.id);
+	outStmt = outStmt || dbCore.prepare('SELECT * FROM Results WHERE id = ?', ++listenDb.id);
 	console.log("---", listenDb.id);
 	listenDb.queue.push({stmt:outStmt, callback:callback});
 	if (!listenDb.active) {
