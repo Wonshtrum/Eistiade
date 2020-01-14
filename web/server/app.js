@@ -4,7 +4,7 @@
 /////////////////////////////////////////////
 const express    = require("express");
 const bodyParser = require("body-parser");
-const sqlite3    = require('sqlite3').verbose();
+const sql        = require('mysql');
 const fs         = require('fs');
 const app        = express();
 const __web      = __dirname.slice(0, __dirname.lastIndexOf('/'));
@@ -28,18 +28,16 @@ app.post('/', function(req, res) {
 	//res.sendFile(__client + '/index.html');
 	console.log(req.body.code);
 	let [cmd, arg0, arg1, arg2] = req.body.code.split('\r\n\r\n');
-	let stmt = dbWeb.prepare('INSERT INTO Requests(cmd, arg0, arg1, arg2) VALUES(?, ?, ?, ?)', [cmd, arg0, arg1, arg2]);
+	let stmt = sql.format('INSERT INTO Requests(cmd, arg0, arg1, arg2) VALUES(?, ?, ?, ?)', [cmd, arg0, arg1, arg2]);
 	listenDb(stmt, line => {console.log('end', line); res.send(line)});
 })
 app.get('/dbCore', function(req, res) {
-	dbCore.all('SELECT * FROM Results', function(err, data) {
-		console.log(err, data);
+	db.query('SELECT * FROM Results', function(err, data) {
 		res.send(data);
 	});
 });
 app.get('/dbWeb', function(req, res) {
-	dbWeb.all('SELECT * FROM Requests', function(err, data) {
-		console.log(err, data);
+	db.query('SELECT * FROM Requests', function(err, data) {
 		res.send(data);
 	});
 });
@@ -51,35 +49,31 @@ console.log('Server started.');
 /////////////////////////////////////////////
 //                   DB                    //
 /////////////////////////////////////////////
-const dbCoreFile = __db + '/coreSide.db';
-const dbWebFile = __db + '/webSide.db';
-const dbCore = new sqlite3.Database(dbCoreFile, sqlite3.OPEN_READONLY);
-const dbWeb = new sqlite3.Database(dbWebFile, sqlite3.OPEN_READWRITE);
+const config = JSON.parse(fs.readFileSync(__db + '/secret.json'));
+const db = sql.createConnection(config)
 
 let _listenDb = function() {
-	dbCore.serialize(function() {
-		for (let [i, req] of Object.entries(listenDb.queue).reverse()) {
-			req.stmt.reset()
-			req.stmt.get(function(err, data) {
-				if (data) {
-					listenDb.queue.splice(i, 1);
-					req.callback(data);
-				} else {
-					console.log(err, data);
-				}
-			});
-		}
-	});
+	for (let [i, req] of Object.entries(listenDb.queue).reverse()) {
+		db.query(req.stmt, function(err, data) {
+			if (data.length == 1) {
+				listenDb.queue.splice(i, 1);
+				req.callback(data);
+			} else {
+				console.log(err, data);
+			}
+		});
+	}
 	if (listenDb.queue.length) {
-		setTimeout(_listenDb, 2000);
+		setTimeout(_listenDb, config.interval);
 	} else {
 		listenDb.active = false;
 	}
 }
 
 let listenDb = function(inStmt, callback, outStmt) {
-	inStmt.run();
-	outStmt = outStmt || dbCore.prepare('SELECT * FROM Results WHERE id = ?', ++listenDb.id);
+	console.log(inStmt);
+	db.query(inStmt);
+	outStmt = outStmt || 'SELECT * FROM Results WHERE id = '+(++listenDb.id);
 	console.log("---", listenDb.id);
 	listenDb.queue.push({stmt:outStmt, callback:callback});
 	if (!listenDb.active) {
@@ -91,5 +85,9 @@ let listenDb = function(inStmt, callback, outStmt) {
 listenDb.id = 0;
 listenDb.active = false;
 listenDb.queue = [];
+db.query('SELECT MAX(id) AS id FROM Requests', function(err, data) {
+	console.log(err, data);
+	listenDb.id = data[0].id;
+});
 
 //db.close();

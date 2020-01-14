@@ -1,15 +1,16 @@
 #!/usr/bin/python3
 
-import sqlite3 as sql
+import pymysql as sql
+import json
 from time import sleep, time
 from threading import Thread, RLock
 from works import *
 
 lock = RLock()
 class Worker(Thread):
-    def __init__(self, workerId, dbFile):
+    def __init__(self, workerId, db):
         self.id = workerId
-        self.dbFile = dbFile
+        self.db = db
         self.working = False
         self.requestId = None
         self.work = None
@@ -18,10 +19,8 @@ class Worker(Thread):
         exitCode, arg0, arg1, arg2 = self.work.process()
         with lock:
             print('FINISH', self.id, time()-start)
-            with sql.connect(self.dbFile) as conn:
-                conn.isolation_level = None
-                cursor = conn.cursor()
-                cursor.execute('INSERT INTO Results VALUES(?, ?, ?, ?, ?)', (self.requestId, exitCode, arg0, arg1, arg2))
+            with self.db.cursor() as cursor:
+                cursor.execute('INSERT INTO Results VALUES(%s, %s, %s, %s, %s)', (self.requestId, exitCode, arg0, arg1, arg2))
         self.working = False
     def give(self, requestId, work):
         if self.working:
@@ -33,9 +32,9 @@ class Worker(Thread):
         self.start()
 
 class WorkerManager:
-    def __init__(self, nbWorkers, dbFile):
+    def __init__(self, nbWorkers, db):
         self.nbWorkers = nbWorkers
-        self.workers = [Worker(workerId, dbFile) for workerId in range(nbWorkers)]
+        self.workers = [Worker(workerId, db) for workerId in range(nbWorkers)]
     def newWork(self, requestId, work):
         for worker in self.workers:
             if not worker.working:
@@ -43,17 +42,21 @@ class WorkerManager:
                 return True
         return False
 
-def polling(dbCoreFile, dbWebFile, nbWorkers):
-    factory = WorkerManager(nbWorkers, dbCoreFile)
-    with sql.connect(dbWebFile, uri=True) as conn:
-        conn.isolation_level = None
-        cursor = conn.cursor()
-        cursor.execute("PRAGMA journal_mode")
-        print(cursor.fetchone())
-        lastIndex = 0
+def polling(config):
+    db = sql.connect(host=config['host'],
+            user=config['user'],
+            passwd=config['password'],
+            db=config['database'],
+            autocommit=True)
+    factory = WorkerManager(config['nbWorkers'], db)
+    interval = config['interval']/1000
+    with db.cursor() as cursor:
+        cursor.execute('SELECT MAX(id) AS id FROM Requests')
+        lastIndex = cursor.fetchone()
+        print(lastIndex)
         while True:
-            sleep(2)
-            cursor.execute('SELECT * FROM Requests WHERE id > ?', (lastIndex,))
+            sleep(interval)
+            cursor.execute('SELECT * FROM Requests WHERE id > %s', (lastIndex,))
             lines = cursor.fetchall()
             print("Polling[{}]".format(len(lines)))
             for line in lines:
@@ -62,9 +65,11 @@ def polling(dbCoreFile, dbWebFile, nbWorkers):
                     print(line[0])
                 else:
                     break
+    db.close()
 
 if __name__ == '__main__':
     dbDir = '../db'
-    dbCoreFile = '{}/coreSide.db'.format(dbDir)
-    dbWebFile = '{}/webSide.db'.format(dbDir)
-    polling(dbCoreFile, dbWebFile, 2)
+    dbConfigFile = '{}/secret.json'.format(dbDir)
+    with open(dbConfigFile) as f:
+        config = json.load(f)
+    polling(config)
