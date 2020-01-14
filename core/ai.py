@@ -25,11 +25,16 @@ class AI:
         self.name = name
         self.lang = lang
 
-        self.fileDir = '{}/{}/{}'.format(AI.rootDir, author, name)
         self.fileName = AI.specs[lang][0].format(name)
+        self.tmpDir = '{}/{}/tmp'.format(AI.rootDir, author)
+        self.tmpPath = '{}/{}'.format(self.tmpDir, self.fileName)
+        self.fileDir = '{}/{}/{}'.format(AI.rootDir, author, name)
         self.filePath = '{}/{}'.format(self.fileDir, self.fileName)
-        
-        AI.collection[name] = self
+    
+    def register(self):
+        bash('mkdir -p {}'.format(self.fileDir))
+        bash('mv {}/* {}'.format(self.tmpDir, self.fileDir))
+        AI.collection[self.name] = self
 
     def exist(name):
         return name in AI.collection
@@ -37,19 +42,24 @@ class AI:
     def get(name):
         return AI.collection[name]
 
-    @errorHandling
     def write(self, code):
-        bash('mkdir -p {}'.format(self.fileDir))
-        with open(self.filePath, 'w') as f:
+        bash('rm -rf {}/*'.format(self.tmpDir))
+        bash('mkdir -p {}'.format(self.tmpDir))
+        with open(self.tmpPath, 'w') as f:
             f.write(code)
 
-    @errorHandling
     def compile(self):
         compileCmd = AI.specs[self.lang][1].format(self.fileName, self.name)
         if compileCmd:
-            bash('cd {} && {}'.format(self.fileDir, compileCmd))
-        bash('chmod -R 777 {}'.format(self.fileDir))
+            bash('cd {} && {}'.format(self.tmpDir, compileCmd))
+        bash('chmod 777 {}/*'.format(self.tmpDir))
 
     def execute(self):
         executeCmd = AI.specs[self.lang][2].format(self.name)
         return 'cd {} && sudo -u nobody {}'.format(self.fileDir, executeCmd)
+
+    @errorHandling
+    def update(self, code):
+        self.write(code)
+        self.compile()
+        self.register()

@@ -16,27 +16,25 @@ class Send(Work):
         self.name, self.lang, self.code = arg0, arg1, arg2
     def routine(self):
         if AI.exist(self.name):
-            return [1, 'AI, {}, already exist'.format(self.name)]
-        ai = AI('Default', self.name, self.lang)
+            #return [1, 'AI, {}, already exist'.format(self.name)]
+            ai = AI.get(self.name)
+        else:
+            ai = AI('Default', self.name, self.lang)
 
-        exitCode, logs = ai.write(self.code)
-        if exitCode != 0:
-            return [exitCode, logs]
-
-        exitCode, logs = ai.compile()
+        exitCode, logs = ai.update(self.code)
         print('Compile', self.name, self.lang)
         return [exitCode, logs]
 
 class Set(Work):
     def __init__(self, arg0, arg1, arg2):
-        self.name = arg0
+        self.name, self.code = arg0, arg1
     def routine(self):
         if not AI.exist(self.name):
             return [1, 'AI, {}, doesn\'t exist'.format(self.name)]
+        ai = AI.get(self.name)
 
-        exitCode, logs = 0, ''
-        sleep(2)
-        print('Set', self.fileName)
+        exitCode, logs = ai.update(self.code)
+        print('Set', self.name)
         return [exitCode, logs]
 
 class Fight(Work):

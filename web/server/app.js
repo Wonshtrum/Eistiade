@@ -25,10 +25,12 @@ app.get('/', function(req, res) {
 	res.sendFile(__client + '/index.html');
 });
 app.post('/', function(req, res) {
-	res.sendFile(__client + '/index.html');
+	//res.sendFile(__client + '/index.html');
 	console.log(req.body.code);
 	let [cmd, arg0, arg1, arg2] = req.body.code.split('\r\n\r\n');
-	db.run('INSERT INTO REQUEST(cmd, arg0, arg1, arg2, state) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, 0]);
+	//db.run('INSERT INTO REQUEST(cmd, arg0, arg1, arg2, state) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, 0]);
+	let stmt = db.prepare('INSERT INTO REQUEST(cmd, arg0, arg1, arg2, state) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, 0]);
+	listenDb(stmt, line => {console.log('end', line); res.send(line)});
 })
 app.get('/db', function(req, res) {
 	db.all('SELECT * FROM REQUEST', function(err, data) {
@@ -46,17 +48,45 @@ console.log('Server started.');
 const dbFile = __db + '/link.db';
 fs.unlinkSync(dbFile);
 const db = new sqlite3.Database(dbFile);
-//db.run('PRAGMA journal_mode=WAL')
+//db.isolationLevel = 0;
+db.run('PRAGMA journal_mode=WAL')
 
-db.serialize(function() {
-	db.run('CREATE TABLE REQUEST (id INTEGER PRIMARY KEY AUTOINCREMENT, cmd INTEHER, arg0 TEXT, arg1 TEXT, arg2 TEXT, state INTEGER)');
-	/*  send: [0, fileName, fileType, code]
-	 *     -> [0, exitCode, log     , None]
-	 *   set: [1, fileName, None    , None]
-	 *     -> [1, exitCode, None    , None]
-	 * fight: [2, fileName, fileName, None]
-	 *     -> [2, result  , log1    , log2]
-	 */
-});
+db.run('CREATE TABLE REQUEST (id INTEGER PRIMARY KEY AUTOINCREMENT, cmd INTEHER, arg0 TEXT, arg1 TEXT, arg2 TEXT, state INTEGER)');
+
+let _listenDb = function() {
+	db.serialize(function() {
+		for (let [i, req] of Object.entries(listenDb.queue).reverse()) {
+			req.stmt.reset()
+			req.stmt.get(function(err, data) {
+				if (data) {
+					listenDb.queue.splice(i, 1);
+					req.callback(data);
+				} else {
+					console.log(err, data);
+				}
+			});
+		}
+	});
+	if (listenDb.queue) {
+		setTimeout(_listenDb, 2000);
+	} else {
+		listenDb.active = false;
+	}
+}
+
+let listenDb = function(inStmt, callback, outStmt) {
+	inStmt.run();
+	outStmt = outStmt || db.prepare('SELECT * FROM REQUEST WHERE id = ? AND state = 2', ++listenDb.id);
+	console.log("---", listenDb.id);
+	listenDb.queue.push({stmt:outStmt, callback:callback});
+	if (!listenDb.active) {
+		console.log("ACTIVATE");
+		listenDb.active = true;
+		_listenDb();
+	}
+}
+listenDb.id = 0;
+listenDb.active = false;
+listenDb.queue = [];
 
 //db.close();

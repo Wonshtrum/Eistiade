@@ -48,7 +48,7 @@ def polling(dbFile, nbWorkers):
     factory = WorkerManager(nbWorkers, dbFile)
     with sql.connect(dbFile) as conn:
         conn.isolation_level = None
-        #conn.execute('PRAGMA journal_mode = WAL')
+        conn.execute('PRAGMA journal_mode = WAL')
         cursor = conn.cursor()
         cursor.execute('UPDATE REQUEST SET state = 0')
         while True:
