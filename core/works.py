@@ -5,6 +5,7 @@ from ai import AI
 class Work:
     NULL = None
     nbArgs = 4
+    sql = None
     def routine(self):
         raise Exception
     def process(self):
@@ -13,21 +14,23 @@ class Work:
         return args
 
 class Send(Work):
-    def __init__(self, arg0, arg1, arg2):
-        self.name, self.lang, self.code = arg0, arg1, arg2
+    sql = 'INSERT INTO Agents(author, name, lang, status) VALUES(%s, %s, %s, %s)'
+    def __init__(self, arg0, arg1, arg2, author):
+        self.name, self.lang, self.code, self.author = arg0, arg1, arg2, author
+        self.inserts = (self.author, self.name, self.lang, 0)
     def routine(self):
         if AI.exist(self.name):
             #return [1, 'AI, {}, already exist'.format(self.name)]
             ai = AI.get(self.name)
         else:
-            ai = AI('Default', self.name, self.lang)
+            ai = AI(self.author, self.name, self.lang)
 
         exitCode, logs = ai.update(self.code)
         print('Compile', self.name, self.lang)
         return [exitCode, logs]
 
 class Set(Work):
-    def __init__(self, arg0, arg1, arg2):
+    def __init__(self, arg0, arg1, arg2, author):
         self.name, self.code = arg0, arg1
     def routine(self):
         if not AI.exist(self.name):
@@ -39,7 +42,7 @@ class Set(Work):
         return [exitCode, logs]
 
 class Fight(Work):
-    def __init__(self, arg0, arg1, arg2):
+    def __init__(self, arg0, arg1, arg2, author):
         self.name1, self.name2 = arg0, arg1
     def routine(self):
         if not AI.exist(self.name1):
@@ -59,5 +62,5 @@ class Fight(Work):
 
 workList = [Send, Set, Fight]
 def work(line):
-    requestId, workId, arg0, arg1, arg2 = line
-    return workList[workId](arg0, arg1, arg2)
+    requestId, workId, arg0, arg1, arg2, author = line
+    return workList[workId](arg0, arg1, arg2, author)

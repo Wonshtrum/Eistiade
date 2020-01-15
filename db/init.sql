@@ -7,7 +7,8 @@ CREATE TABLE Requests (
 	cmd INTEGER,
 	arg0 TEXT,
 	arg1 TEXT,
-	arg2 TEXT);
+	arg2 TEXT,
+	author TEXT);
 
 CREATE TABLE Results (
 	id INTEGER PRIMARY KEY,
@@ -15,3 +16,9 @@ CREATE TABLE Results (
 	field0 TEXT,
 	filed1 TEXT,
 	field2 TEXT);
+
+CREATE TABLE Agents (
+	author TEXT,
+	name TEXT,
+	lang TEXT,
+	status INTEGER);

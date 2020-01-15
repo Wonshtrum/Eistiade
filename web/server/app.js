@@ -28,7 +28,7 @@ app.post('/', function(req, res) {
 	//res.sendFile(__client + '/index.html');
 	console.log(req.body.code);
 	let [cmd, arg0, arg1, arg2] = req.body.code.split('\r\n\r\n');
-	let stmt = sql.format('INSERT INTO Requests(cmd, arg0, arg1, arg2) VALUES(?, ?, ?, ?)', [cmd, arg0, arg1, arg2]);
+	let stmt = sql.format('INSERT INTO Requests(cmd, arg0, arg1, arg2, author) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, 'Default']);
 	listenDb(stmt, line => {console.log('end', line); res.send(line)});
 })
 app.get('/dbCore', function(req, res) {
@@ -41,6 +41,12 @@ app.get('/dbWeb', function(req, res) {
 		res.send(data);
 	});
 });
+app.get('/dbAgent', function(req, res) {
+	db.query('SELECT * FROM Agents', function(err, data) {
+		res.send(data);
+	});
+});
+
 
 app.listen(8080);
 console.log('Server started.');
@@ -86,7 +92,7 @@ listenDb.id = 0;
 listenDb.active = false;
 listenDb.queue = [];
 db.query('SELECT MAX(id) AS id FROM Requests', function(err, data) {
-	console.log(err, data);
+	console.log(err, data, data[0].id);
 	listenDb.id = data[0].id;
 });
 

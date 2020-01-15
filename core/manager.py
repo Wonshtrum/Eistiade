@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import pymysql as sql
-import json
+from json import load as json
 from time import sleep, time
 from threading import Thread, RLock
 from works import *
@@ -21,6 +21,8 @@ class Worker(Thread):
             print('FINISH', self.id, time()-start)
             with self.db.cursor() as cursor:
                 cursor.execute('INSERT INTO Results VALUES(%s, %s, %s, %s, %s)', (self.requestId, exitCode, arg0, arg1, arg2))
+                if self.work.sql and exitCode == 0:
+                    cursor.execute(self.work.sql, self.work.inserts)
         self.working = False
     def give(self, requestId, work):
         if self.working:
@@ -42,17 +44,27 @@ class WorkerManager:
                 return True
         return False
 
+def reload(db):
+    with db.cursor() as cursor:
+        cursor.execute('SELECT * FROM Agents')
+        for line in cursor.fetchall():
+            print(line)
+            author, name, lang, status = line
+            ai = AI(author, name, lang)
+            ai.register(False)
+
 def polling(config):
     db = sql.connect(host=config['host'],
             user=config['user'],
             passwd=config['password'],
             db=config['database'],
             autocommit=True)
+    reload(db)
     factory = WorkerManager(config['nbWorkers'], db)
     interval = config['interval']/1000
     with db.cursor() as cursor:
-        cursor.execute('SELECT MAX(id) AS id FROM Requests')
-        lastIndex = cursor.fetchone()
+        cursor.execute('SELECT MAX(id) AS id FROM Results')
+        lastIndex = cursor.fetchone()[0] or 0
         print(lastIndex)
         while True:
             sleep(interval)
@@ -71,5 +83,5 @@ if __name__ == '__main__':
     dbDir = '../db'
     dbConfigFile = '{}/secret.json'.format(dbDir)
     with open(dbConfigFile) as f:
-        config = json.load(f)
+        config = json(f)
     polling(config)

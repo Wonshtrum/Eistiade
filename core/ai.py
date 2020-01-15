@@ -31,9 +31,10 @@ class AI:
         self.fileDir = '{}/{}/{}'.format(AI.rootDir, author, name)
         self.filePath = '{}/{}'.format(self.fileDir, self.fileName)
     
-    def register(self):
-        bash('mkdir -p {}'.format(self.fileDir))
-        bash('mv {}/* {}'.format(self.tmpDir, self.fileDir))
+    def register(self, create=True):
+        if create:
+            bash('mkdir -p {}'.format(self.fileDir))
+            bash('mv {}/* {}'.format(self.tmpDir, self.fileDir))
         AI.collection[self.name] = self
 
     def exist(name):
