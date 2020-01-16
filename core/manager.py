@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import pymysql as sql
-from json import load as json
+from json import load as fromJson
 from time import sleep, time
 from threading import Thread, RLock
 from works import *
@@ -16,11 +16,11 @@ class Worker(Thread):
         self.work = None
     def run(self):
         start = time()
-        exitCode, arg0, arg1, arg2 = self.work.process()
+        exitCode, field0, field1, field2 = self.work.process()
         with lock:
             print('FINISH', self.id, time()-start)
             with self.db.cursor() as cursor:
-                cursor.execute('INSERT INTO Results VALUES(%s, %s, %s, %s, %s)', (self.requestId, exitCode, arg0, arg1, arg2))
+                cursor.execute('INSERT INTO Results VALUES(%s, %s, %s, %s, %s)', (self.requestId, exitCode, field0, field1, field2))
                 if self.work.sql and exitCode == 0:
                     cursor.execute(self.work.sql, self.work.inserts)
         self.working = False
@@ -83,5 +83,5 @@ if __name__ == '__main__':
     dbDir = '../db'
     dbConfigFile = '{}/secret.json'.format(dbDir)
     with open(dbConfigFile) as f:
-        config = json(f)
+        config = fromJson(f)
     polling(config)

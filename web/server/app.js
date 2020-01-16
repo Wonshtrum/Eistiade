@@ -29,7 +29,7 @@ app.post('/', function(req, res) {
 	console.log(req.body.code);
 	let [cmd, arg0, arg1, arg2] = req.body.code.split('\r\n\r\n');
 	let stmt = sql.format('INSERT INTO Requests(cmd, arg0, arg1, arg2, author) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, 'Default']);
-	listenDb(stmt, line => {console.log('end', line); res.send(line)});
+	listenDb(stmt, cmd, line => {console.log('end', line); res.send(line)});
 })
 app.get('/dbCore', function(req, res) {
 	db.query('SELECT * FROM Results', function(err, data) {
@@ -62,6 +62,12 @@ let _listenDb = function() {
 	for (let [i, req] of Object.entries(listenDb.queue).reverse()) {
 		db.query(req.stmt, function(err, data) {
 			if (data.length == 1) {
+				data = data[0];
+				if (req.cmd == 2 && data.exitCode == 0) {
+					data.field0 = JSON.parse(data.field0);
+					data.field1 = JSON.parse(data.field1);
+					data.field2 = JSON.parse(data.field2);
+				}
 				listenDb.queue.splice(i, 1);
 				req.callback(data);
 			} else {
@@ -76,12 +82,12 @@ let _listenDb = function() {
 	}
 }
 
-let listenDb = function(inStmt, callback, outStmt) {
+let listenDb = function(inStmt, cmd, callback, outStmt) {
 	console.log(inStmt);
 	db.query(inStmt);
 	outStmt = outStmt || 'SELECT * FROM Results WHERE id = '+(++listenDb.id);
 	console.log("---", listenDb.id);
-	listenDb.queue.push({stmt:outStmt, callback:callback});
+	listenDb.queue.push({stmt:outStmt, cmd:cmd, callback:callback});
 	if (!listenDb.active) {
 		console.log("ACTIVATE");
 		listenDb.active = true;

@@ -7,6 +7,7 @@ class Game:
         self.columns = columns
         self.matrix = [[0]*columns for _ in range(lines)]
         self.winner = None
+        self.log = {'moves':[], 'win':{}}
     def showBoard(self):
         return '\n'.join(' '.join(map(lambda x:'.OX'[x], line)) for line in self.matrix)
     def play(self, id, data):
@@ -17,26 +18,42 @@ class Game:
         errorIf(line == 0, error=ErrorWithMessage('column full'))
         line -= 1
         self.matrix[line][column] = id
+        self.log['moves'].append(column)
+    def win(self, id, state=None):
+        self.winner = id
+        self.log['win']['id'] = id
+        self.log['win']['state'] = state
+    def _check(self, i, j, k, id, align):
+        print(k,">",i,j,"=",align)
+        if self.matrix[i][j] == id:
+            align += 1
+            if align >= self.goal:
+                self.win(id, [i, j, k])
+                return True, align
+            return False, align
+        else:
+            return False, 0
     def checkWin(self, id):
-        maxAlign = 0
         for i in range(self.columns):
             align = 0
-            for j in range(0, self.lines):
-                if self.matrix[j][i] == id:
-                    align += 1
-                    if align > maxAlign:
-                        maxAlign = align
-                else:
-                    align = 0
+            for j in range(self.lines):
+                win, align = self._check(j, i, 0, id, align)
+                if win: return True
         for i in range(self.lines):
             align = 0
             for j in range(self.columns):
-                if self.matrix[i][j] == id:
-                    align += 1
-                    if align > maxAlign:
-                        maxAlign = align
-                else:
-                    align = 0
-        if maxAlign >= self.goal:
-            self.winner = id
-        return maxAlign >= self.goal
+                win, align = self._check(i, j, 1, id, align)
+                if win: return True
+        for i in range(self.goal-self.lines, self.columns-self.goal+1):
+            align = 0
+            for j in range(self.lines):
+                if i+j>=0 and i+j<self.columns:
+                    win, align = self._check(j, i+j, 2, id, align)
+                    if win: return True
+        for i in range(self.goal-1, self.columns+self.lines-self.goal):
+            align = 0
+            for j in range(self.lines):
+                if i-j>=0 and i-j<self.columns:
+                    win, align = self._check(j, i-j, 3, id, align)
+                    if win: return True
+        return False

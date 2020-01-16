@@ -1,6 +1,7 @@
 from time import sleep
 from core import fight
 from ai import AI
+from json import dumps as toJson
 
 class Work:
     NULL = None
@@ -46,19 +47,20 @@ class Fight(Work):
         self.name1, self.name2 = arg0, arg1
     def routine(self):
         if not AI.exist(self.name1):
-            return [-1, 'AI1, {}, doesn\'t exist'.format(self.name1)]
+            return [1, 'AI1, {}, doesn\'t exist'.format(self.name1)]
         if not AI.exist(self.name2):
-            return [-1, 'AI2, {}, doesn\'t exist'.format(self.name2)]
+            return [1, 'AI2, {}, doesn\'t exist'.format(self.name2)]
 
         ai1 = AI.get(self.name1)
         ai2 = AI.get(self.name2)
         game, ai1, ai2 = fight(ai1, ai2)
 
-        result = game.winner
-        log1 = ''.join(ai1.logHistory)
-        log2 = ''.join(ai2.logHistory)
+        log1 = toJson(ai1.logHistory)
+        log2 = toJson(ai2.logHistory)
+        gameLog = toJson(game.log)
+        print("=======",game.log)
         print('Fight', self.name1, self.name2)
-        return [result, log1, log2]
+        return [0, log1, log2, gameLog]
 
 workList = [Send, Set, Fight]
 def work(line):

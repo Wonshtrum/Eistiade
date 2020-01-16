@@ -14,7 +14,7 @@ CREATE TABLE Results (
 	id INTEGER PRIMARY KEY,
 	exitCode INTEGER,
 	field0 TEXT,
-	filed1 TEXT,
+	field1 TEXT,
 	field2 TEXT);
 
 CREATE TABLE Agents (

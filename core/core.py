@@ -81,7 +81,7 @@ def fight(ai1, ai2):
             except Exception as E:
                 player1.kill()
                 player2.kill()
-                game.winner = 3-player.id
+                game.win(3-player.id)
                 if type(E) == ErrorWithMessage:
                     player.logEntry(E.msg)
                 break
