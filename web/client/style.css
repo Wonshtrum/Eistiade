@@ -1,87 +1,24 @@
-html {
-	--color0: #252e38;
-	--color1: #131c25;
-	--color2: #41454a;
-	--color3: #718891;
-	--margin: 6px;
-	--minW  : 200px;
-	--titleW: 2.5em;
-
-	color: var(--color3);
-	font-family: Open Sans, Lato, sans-serif;
-	scrollbar-color: var(--color3) transparent;
-}
-html, body, form {
-	margin: 0;
-}
-body {
-	width: 100%;
-	height: 100%;
-}
-div { overflow: hidden; }
-
-.flexIn { display: flex; }
-.flexIn.down { flex-direction: column; }
-.flexIn.right { flex-direction: row; }
-.flexIn > .flexIn { flex: 1 0 var(--minW); }
-
-.margin-0 { margin: 0 !important; }
-.margin-1 { margin: var(--margin) !important; }
-.flex-0 { flex: 0 0 var(--minW) !important; }
-.flex-1 { flex: 1 0 var(--minW) !important; }
-.flex-2 { flex: 2 0 var(--minW) !important; }
-.flex-3 { flex: 3 0 var(--minW) !important; }
-.flex-4 { flex: 4 0 var(--minW) !important; }
-.flex-5 { flex: 5 0 var(--minW) !important; }
-.flex-6 { flex: 6 0 var(--minW) !important; }
-.flex-h { flex: 0 0 0 !important; }
-.flex-t { flex: 0 0 var(--titleW) !important; }
-.in-0 { background: var(--color0) !important; }
-.in-1 { background: var(--color1) !important; }
-.in-2 { background: var(--color2) !important; }
-.out-0 { border: 1px solid var(--color0) !important; }
-.out-1 { border: 1px solid var(--color1) !important; }
-.out-2 { border: 1px solid var(--color2) !important; }
-
-.cont {
-	display: flex;
-	overflow: hidden !important;
-}
-.cont, .panel {
-	background: var(--color0);
-	border: 1px solid var(--color2);
-	flex: 1 0 var(--minW);
-	flex-direction: column;
-	margin: var(--margin);
-	overflow: auto;
-}
-/*.cont > .panel {
-	margin: 0;
-	border: none;
-}*/
-.titleText, .title {
-	flex: 0 0 var(--titleW) !important;
-	line-height: var(--titleW);
-	padding-left: 1em;
-	font-weight: 700;
-}
-.title { background: #41454a88; }
-.min > .title:hover { background: var(--color2); }
-.min > .title::after {
-	content: "✖";
-	font-size: 180%;
-	float: right;
-	margin-right: 0.1em;
-}
-
 #header {
 	color: white;
 	margin-bottom: calc(-2 * var(--margin));
 }
 
-.debug { background: #F00; }
-.test {
+#langCont {
+	right: var(--margin);
+}
+
+#nameIn {
+	margin-left: 1em;
+}
+
+#editor {
+	font-size: 90%;
+}
+
+.debug { 
+	/*background: #F00;*/
+}
+div.debug {
 	margin: 10px;
 	height: 200px;
-	background: #41454a22;
 }

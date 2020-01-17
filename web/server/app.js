@@ -24,10 +24,11 @@ app.use('/', express.static(__client));
 app.get('/', function(req, res) {
 	res.sendFile(__client + '/index.html');
 });
-app.post('/', function(req, res) {
-	//res.sendFile(__client + '/index.html');
-	console.log(req.body.code);
-	let [cmd, arg0, arg1, arg2] = req.body.code.split('\r\n\r\n');
+app.post('/submit', function(req, res) {
+	console.log('-----');
+	console.log(req.body['args[]']);
+	console.log('-----');
+	let [cmd, arg0, arg1, arg2] = req.body['args[]'];
 	let stmt = sql.format('INSERT INTO Requests(cmd, arg0, arg1, arg2, author) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, 'Default']);
 	listenDb(stmt, cmd, line => {console.log('end', line); res.send(line)});
 })
