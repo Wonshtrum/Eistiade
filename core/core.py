@@ -49,7 +49,7 @@ def fight(ai1, ai2):
     player1.send('1')
     player2.send('2')
 
-    game  = Game()
+    game  = Game(ai1.name, ai2.name)
     error = 0
     turn  = 0
     while not game.winner and not error:

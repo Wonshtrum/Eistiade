@@ -1,13 +1,13 @@
 from utils import ErrorWithMessage, errorIf, errorIfNot
 
 class Game:
-    def __init__(self, lines=6, columns=7, goal=4):
+    def __init__(self, ai1, ai2, lines=6, columns=7, goal=4):
         self.goal = goal
         self.lines = lines
         self.columns = columns
         self.matrix = [[0]*columns for _ in range(lines)]
         self.winner = None
-        self.log = {'moves':[], 'win':{}}
+        self.log = {'ai1':ai1, 'ai2':ai2, 'moves':[], 'win':{}}
     def showBoard(self):
         return '\n'.join(' '.join(map(lambda x:'.OX'[x], line)) for line in self.matrix)
     def play(self, id, data):

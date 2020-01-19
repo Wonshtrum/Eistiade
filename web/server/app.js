@@ -25,9 +25,6 @@ app.get('/', function(req, res) {
 	res.sendFile(__client + '/index.html');
 });
 app.post('/submit', function(req, res) {
-	console.log('-----');
-	console.log(req.body['args[]']);
-	console.log('-----');
 	let [cmd, arg0, arg1, arg2] = req.body['args[]'];
 	let stmt = sql.format('INSERT INTO Requests(cmd, arg0, arg1, arg2, author) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, 'Default']);
 	listenDb(stmt, cmd, line => {console.log('end', line); res.send(line)});

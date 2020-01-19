@@ -7,6 +7,7 @@ class Work:
     NULL = None
     nbArgs = 4
     sql = None
+    id = None
     def routine(self):
         raise Exception
     def process(self):
@@ -28,7 +29,7 @@ class Send(Work):
 
         exitCode, logs = ai.update(self.code)
         print('Compile', self.name, self.lang)
-        return [exitCode, logs]
+        return [exitCode, self.name, logs]
 
 class Set(Work):
     def __init__(self, arg0, arg1, arg2, author):
@@ -63,6 +64,8 @@ class Fight(Work):
         return [0, log1, log2, gameLog]
 
 workList = [Send, Set, Fight]
+for i, w in enumerate(workList):
+    w.id = i
 def work(line):
     requestId, workId, arg0, arg1, arg2, author = line
     return workList[workId](arg0, arg1, arg2, author)

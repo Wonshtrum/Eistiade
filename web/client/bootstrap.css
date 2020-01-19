@@ -1,19 +1,19 @@
 html {
-	--color0: #252e38;
-	--color1: #131c25;
-	--color2: #41454a;
-	--color3: #718891;
-	--colorT: #3c3c3c;
+	--primColor: #252e38;
+	--darkColor: #131c25;
+	--lightColor: #41454a;
+	--lighterColor: #718891;
+	--blackColor: #3c3c3c;
 	--margin: 6px;
-	--minW  : 200px;
+	--minW  : 160px;
 	--titleW: 2.5em;
 
-	--d3  : 5px;
-	--d3h : 2px;
+	--d3  : 3px;
+	--d3h : 1px;
 
-	color: var(--color3);
+	color: var(--lighterColor);
 	font-family: Open Sans, Lato, sans-serif;
-	scrollbar-color: var(--color3) transparent;
+	scrollbar-color: var(--lighterColor) transparent;
 }
 html, body, form {
 	margin: 0;
@@ -25,52 +25,54 @@ body {
 div { overflow: hidden; }
 input {
 	border: none;
-	border: solid 1px var(--color2);
-	background: var(--color0);
+	border: solid 1px var(--lightColor);
+	background: var(--primColor);
 	color: white;
 	padding: .3em;
 }
+img { width: 100%; }
 
 .flexIn { display: flex; }
 .flexIn.down { flex-direction: column; }
 .flexIn.right { flex-direction: row; }
 .flexIn > * {
-	flex: 1 0 auto;
+	flex: 1 1 var(--minW);
 	transition: flex 0.5s;
 }
 
 .margin-0  { margin: 0 !important; }
 .margin-05 { margin: calc(var(--margin) / 2) !important; }
 .margin-1  { margin: var(--margin) !important; }
-.flex-0 { flex: 0 0 auto !important; }
-.flex-1 { flex: 1 0 auto !important; }
-.flex-2 { flex: 2 0 auto !important; }
-.flex-3 { flex: 3 0 auto !important; }
-.flex-4 { flex: 4 0 auto !important; }
-.flex-5 { flex: 5 0 auto !important; }
-.flex-6 { flex: 6 0 auto !important; }
-.flex-h { flex: 0 0 0 !important; }
-.flex-t { flex: 0 0 var(--titleW) !important; }
+.flex-0 { flex: 0 1 0 !important; }
+.flex-1 { flex: 1 1 0 !important; }
+.flex-2 { flex: 2 1 0 !important; }
+.flex-3 { flex: 3 1 0 !important; }
+.flex-4 { flex: 4 1 0 !important; }
+.flex-5 { flex: 5 1 0 !important; }
+.flex-6 { flex: 6 1 0 !important; }
+.flex-t { flex: 0 1 var(--titleW) !important; }
 .flex-m { flex-basis: var(--minW) !important; }
-.in-0 { background: var(--color0) !important; }
-.in-1 { background: var(--color1) !important; }
-.in-2 { background: var(--color2) !important; }
-.out-0 { border: 1px solid var(--color0) !important; }
-.out-1 { border: 1px solid var(--color1) !important; }
-.out-2 { border: 1px solid var(--color2) !important; }
+.flex-a { flex-basis: auto !important; }
+.in-prim { background: var(--primColor) !important; }
+.in-dark { background: var(--darkColor) !important; }
+.in-light { background: var(--lightColor) !important; }
+.out-prim { border: 1px solid var(--primColor) !important; }
+.out-dark { border: 1px solid var(--darkColor) !important; }
+.out-light { border: 1px solid var(--lightColor) !important; }
 
 .cont {
 	display: flex;
 	overflow: hidden !important;
 }
 .cont, .panel {
-	background: var(--color0);
-	border: 1px solid var(--color2);
-	flex: 1 0 var(--minW);
+	background: var(--primColor);
+	border: 1px solid var(--lightColor);
+	flex: 1 1 var(--minW);
 	flex-direction: column;
 	margin: var(--margin);
 	overflow: auto;
 }
+.cont > .panel { background: #282a36; }
 
 .titleText, .title {
 	flex: 0 0 var(--titleW) !important;
@@ -82,7 +84,7 @@ input {
 	background: #41454a88;
 	position: relative;
 }
-.min > .title:hover { background: var(--color2); }
+.min > .title:hover { background: var(--lightColor); }
 .min > .title::after {
 	content: "✖";
 	font-size: 180%;
@@ -90,15 +92,37 @@ input {
 	margin-right: 0.1em;
 }
 
-
+.log {
+	margin: var(--margin);
+	padding: var(--margin);
+	background: var(--darkColor);
+	word-wrap: break-word;
+	color: white;
+}
+.log b {
+	background: var(--lightColor);
+	padding: 2px;
+	border-radius: 5px;
+	border: solid 1px var(--lighterColor);
+}
 
 .flash {
 	background: #f2bb13;
 	font-weight: 700;
 	padding: .4em;
-	color: var(--colorT);
+	color: var(--blackColor);
 }
 .flash:hover { background: #ffcc55; }
+.title > .right {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	margin: auto;
+	height: 1.9em;
+	right: var(--margin);
+	border: none;
+}
+
 .d3 {
 	display: inline-block;
 	border-top: solid var(--d3) #d7a50d;
@@ -113,18 +137,11 @@ input {
 	margin-bottom: calc(var(--d3) - var(--d3h));
 }
 
-
-
-
 .select {
 	display: inline-block;
 	position: absolute;
 	background-color: #fff;
 	overflow: hidden;
-	height: 1.9em;
-	top: 0;
-	bottom: 0;
-	margin: auto;
 }
 .select select {
 	-webkit-appearance: none;

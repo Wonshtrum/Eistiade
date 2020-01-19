@@ -5,9 +5,15 @@
 <script src='jquery.js' type='text/javascript' charset='utf-8'></script>
 
 <html>
-<body class='flexIn in-1'>
+<body class='flexIn in-dark'>
 	<!-- LEFT BAR -->
-	<div class='panel flex-0 margin-0 flex-m'></div>
+	<div id='menu' class='panel flex-0 margin-0 flex-m'>
+		<img src='logo.png' alt='logo'></img>
+		<div id='submit' class='flexIn margin-1 flex-a'><div class='d3 flash'>Soumettre</div></div>
+		<div id='fight' class='flexIn margin-1 flex-a'><div class='d3 flash'>Combattre</div></div>
+		<div id='history' class='flexIn margin-1 flex-a'><div class='d3 flash'>Historique</div></div>
+		<div id='board' class='flexIn margin-1 flex-a'><div class='d3 flash'>LeaderBoard</div></div>
+	</div>
 
 	<div class='flexIn down'>
 		<!-- HEADER -->
@@ -16,48 +22,33 @@
 		<div class='flexIn margin-1'>
 			<!-- LEFT PANEL -->
 			<div class='flexIn down'>
-				<div class='panel flex-3'></div>
+				<div class='cont flex-3 min'>
+					<div class='title'>Jeu</div>
+					<div class='panel'></div>
+				</div>
 				<div class='cont flex-2 min'>
-					<div class='title'>Sortie console</div>
-					<div class='panel'>
-						<div class='debug'></div>
-						<div class='debug'></div>
-						<div class='debug'></div>
-						<div class='debug'></div>
-					</div>
+					<div class='title'>Sortie console<button id='clear' class='flash right'>vider</button></div>
+					<div id='logs' class='panel'></div>
 				</div>
 			</div>
 			
 			<!-- RIGHT PANEL -->
-			<div class='flexIn down'>
-				<div class='cont flex-5'>
-					<div class='title'>Editeur <input id='nameIn' type='text'/>
-					<div id='langCont' class='select'>
-						<select id='langSel' class='flash'>
-							<option name='' lang=''>Text</option>
-							<option name='python3' lang='python'>Python3</option>
-							<option name='python2' lang='python'>Python2</option>
-							<option name='java' lang='java'>Java</option>
-							<option name='c++' lang='c_cpp'>C++</option>
-							<option name='c' lang='c_cpp'>C</option>
-						</select>
-					</div>
-
-					</div>
-					<div class='flexIn panel'>
-						<div id=editor></div>
-					</div>
+			<div class='cont'>
+				<div class='title'>Editeur <input id='nameIn' type='text'/>
+				<div id='langCont' class='select right'>
+					<select id='langSel' class='flash'>
+						<option name='' lang=''>Text</option>
+						<option name='python3' lang='python'>Python3</option>
+						<option name='python2' lang='python'>Python2</option>
+						<option name='java' lang='java'>Java</option>
+						<option name='c++' lang='c_cpp'>C++</option>
+						<option name='c' lang='c_cpp'>C</option>
+					</select>
 				</div>
-				<div class='cont min'>
-					<div class='title'>Menu</div>
-					<div class='panel'>
-						<div id='menu' class='flexIn down'>
-							<div id='submit' class='flexIn margin-05'><div class='d3 flash'>Soumettre</div></div>
-							<div class='flexIn margin-05'><div class='d3 flash'>Combattre</div></div>
-							<div class='flexIn margin-05'><div class='d3 flash'>Historique</div></div>
-							<div class='flexIn margin-05'><div class='d3 flash'>LeaderBoard</div></div>
-						</div>
-					</div>
+
+				</div>
+				<div class='flexIn panel'>
+					<div id=editor></div>
 				</div>
 			</div>
 		</div>

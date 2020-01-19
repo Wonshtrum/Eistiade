@@ -22,3 +22,9 @@ div.debug {
 	margin: 10px;
 	height: 200px;
 }
+
+#menu > .flexIn {
+	height: 100px;
+	line-height: calc(100px - 1em);
+	text-align: center;
+}

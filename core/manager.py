@@ -20,7 +20,7 @@ class Worker(Thread):
         with lock:
             print('FINISH', self.id, time()-start)
             with self.db.cursor() as cursor:
-                cursor.execute('INSERT INTO Results VALUES(%s, %s, %s, %s, %s)', (self.requestId, exitCode, field0, field1, field2))
+                cursor.execute('INSERT INTO Results VALUES(%s, %s, %s, %s, %s, %s)', (self.requestId, self.work.id, exitCode, field0, field1, field2))
                 if self.work.sql and exitCode == 0:
                     cursor.execute(self.work.sql, self.work.inserts)
         self.working = False

@@ -12,6 +12,7 @@ CREATE TABLE Requests (
 
 CREATE TABLE Results (
 	id INTEGER PRIMARY KEY,
+	cmd INTEGER,
 	exitCode INTEGER,
 	field0 TEXT,
 	field1 TEXT,
@@ -22,3 +23,7 @@ CREATE TABLE Agents (
 	name TEXT,
 	lang TEXT,
 	status INTEGER);
+
+CREATE TABLE Users (
+	name TEXT,
+	password TEXT);
