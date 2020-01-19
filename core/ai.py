@@ -24,6 +24,8 @@ class AI:
         self.author = author
         self.name = name
         self.lang = lang
+        self.ready = False
+        self.compiled = False
 
         self.fileName = AI.specs[lang][0].format(name)
         self.tmpDir = '{}/{}/tmp'.format(AI.rootDir, author)
@@ -35,10 +37,13 @@ class AI:
         if create:
             bash('mkdir -p {}'.format(self.fileDir))
             bash('mv {}/* {}'.format(self.tmpDir, self.fileDir))
-        AI.collection[self.name] = self
+        else:
+            AI.collection[self.name] = self
+            self.ready = True
+            self.compiled = True
 
-    def exist(name):
-        return name in AI.collection
+    def exist(name, official=True):
+        return name in AI.collection and (AI.collection[name].ready or not official)
 
     def get(name):
         return AI.collection[name]
@@ -61,6 +66,7 @@ class AI:
 
     @errorHandling
     def update(self, code):
+        AI.collection[self.name] = self
         self.write(code)
         self.compile()
         self.register()

@@ -4,6 +4,8 @@ html {
 	--lightColor: #41454a;
 	--lighterColor: #718891;
 	--blackColor: #3c3c3c;
+	--flashColor: #f2bb13;
+	--ideColor: #282a36;
 	--margin: 6px;
 	--minW  : 160px;
 	--titleW: 2.5em;
@@ -72,7 +74,7 @@ img { width: 100%; }
 	margin: var(--margin);
 	overflow: auto;
 }
-.cont > .panel { background: #282a36; }
+.cont > .panel { background: var(--ideColor); }
 
 .titleText, .title {
 	flex: 0 0 var(--titleW) !important;
@@ -107,7 +109,7 @@ img { width: 100%; }
 }
 
 .flash {
-	background: #f2bb13;
+	background: var(--flashColor);
 	font-weight: 700;
 	padding: .4em;
 	color: var(--blackColor);
@@ -170,4 +172,23 @@ img { width: 100%; }
 	border-width: 6px;
 	border-style: solid;
 	pointer-events: none;
+}
+
+.loading {
+	height: 1em;
+	text-align: center;
+	margin-top: 1em;
+}
+.loading > .bar {
+	display: inline-block;
+	width: 0.5em;
+	height: 0.5em;
+	background: white;
+	margin: 0 0.5em;
+	transition: margin 0.5s;
+}
+.loading[progress='0'] > .bar:nth-child(1), .loading[progress='1'] > .bar:nth-child(2), .loading[progress='2'] > .bar:nth-child(3) {
+	background: var(--flashColor);
+	margin-right: 0;
+	margin-left: 1em;
 }

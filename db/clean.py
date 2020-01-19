@@ -18,4 +18,5 @@ with db.cursor() as cursor:
     cursor.execute('DELETE FROM Requests')
     cursor.execute('DELETE FROM Results')
     cursor.execute('DELETE FROM Agents')
+    cursor.execute('ALTER TABLE Requests AUTO_INCREMENT = 0')
 db.close()
