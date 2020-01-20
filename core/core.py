@@ -8,6 +8,7 @@ from game import Game
 class Player:
     def __init__(self, ai, id):
         self.id = id
+        self.baseName = ai.name
         self.name = 'IA[{}, {}]'.format(id, ai.name)
         self.proc = Popen(ai.execute(), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.logHistory = []
@@ -58,14 +59,16 @@ def fight(ai1, ai2):
             start = time()
             try:
                 print(game.showBoard())
-                player.newLogEntry('-------------[{}]'.format(turn))
+                player.newLogEntry('[Turn {}]: '.format(turn))
                 player.send(game.showBoard())
                 try:
                     data = thread(1, player.listen)()
                     errorIf(player.poll() is not None)
-                    player.logEntry(': "{}"'.format(data))
+                    player.logEntry('{} played: "{}",'.format(player.baseName, data))
+                except:
+                    player.logEntry('ended')
                 finally:
-                    player.logEntry(' AFTER: {}\n'.format(time()-start))
+                    player.logEntry(' after {:.5f}s.\n'.format(time()-start))
                     player.collectLogs()
                 print('{}: {} ({})'.format(player.name, data, time()-start))
                 try:

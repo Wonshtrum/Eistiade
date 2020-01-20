@@ -1,5 +1,6 @@
 #header {
 	color: white;
+	line-height: var(--titleW);
 	margin-bottom: calc(-2 * var(--margin));
 }
 
@@ -15,6 +16,10 @@
 	font-size: 90%;
 }
 
+.log .history {
+	margin-bottom: calc(-1 * var(--margin));
+}
+
 .debug { 
 	/*background: #F00;*/
 }
@@ -27,4 +32,8 @@ div.debug {
 	height: 100px;
 	line-height: calc(100px - 1em);
 	text-align: center;
+}
+
+#logs {
+	scroll-behavior: smooth;
 }

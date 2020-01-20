@@ -8,6 +8,7 @@ const history = document.getElementById('history');
 const board = document.getElementById('board');
 const clear = document.getElementById('clear');
 const logs = document.getElementById('logs');
+logs.id = 0;
 
 editor.setTheme('ace/theme/dracula');
 langSel.onchange = e => {
@@ -19,11 +20,14 @@ langSel.onchange = e => {
 }
 langSel.onchange();
 
-document.querySelectorAll('.min').forEach(div => {
-	let title = div.querySelector('.title');
-	title.querySelectorAll('.title > *').forEach(e => e.onclick = event => event.stopPropagation());
-	title.onclick = e => { div.classList.toggle('flex-t'); setTimeout(e => editor.resize(), 500) };
-});
+const minimize = node => {
+	node.querySelectorAll('.min').forEach(div => {
+		let title = div.querySelector('.title');
+		title.querySelectorAll('.title > *').forEach(e => e.onclick = event => event.stopPropagation());
+		title.onclick = e => { div.classList.toggle('flex-t'); };
+	});
+}
+minimize(document);
 
 test.onclick = e => {
 	let code = editor.getValue();
@@ -86,14 +90,23 @@ const createNode = (type, elements, options) => {
 	return node;
 }
 
+logs.scroll = (node) => {
+	node = node || logs.lastChild;
+	logs.scrollTop = node.offsetTop - logs.offsetTop;
+}
 const addLog = msg => {
-	let node = createNode('div', [ createNode('pre', msg) ], {class: 'log'});
+	logs.id++;
+	let node = createNode('div', [ createNode('pre', msg) ], {class: 'log wrapped'});
 	logs.appendChild(node);
+	logs.scroll();
+	node.classList.remove('wrapped');
+	minimize(node);
 	return node;
 }
 const loading = () => {
 	let bar = createNode('div', [ createNode('div', [], {class: 'bar'}), createNode('div', [], {class: 'bar'}), createNode('div', [], {class: 'bar'}) ], {class: 'loading'});
 	logs.appendChild(bar);
+	logs.scroll();
 	bar.end = false;
 	bar.progress = -1;
 	bar.update = () => {
@@ -125,12 +138,19 @@ const log = (msg, bar) => {
 		}
 	} else if (msg.cmd === 2) {
 		if (msg.exitCode === 0) {
-			let ai1 = msg.args[0];
-			let ai2 = msg.args[0];
-			console.log(msg)
-			addLog([ 'Combat entre ', createNode('b', [ ai1 ] ), ' et ', createNode('b', [ ai2 ]), ', resultat :\n'+msg.field0.join('') ]);
+			let fightLog = createNode('div', msg.field0.map((e, i) => {
+				let endLine = e.indexOf('\n');
+				let content = [ createNode('div', [ e.substring(0, endLine) ], {class: 'title'}) ];
+				let min = '';
+				if (e.length-endLine-1 > 0) {
+					content.push(createNode('div', [ e.substring(endLine+1) ], {class: 'margin-1'}));
+					min = ' min';
+				}
+				return createNode('div', content, {class: 'cont flex-a'+min, id: 'log-'+logs.id+'-'+i});
+			}), {class: 'flexIn down history'})
+			addLog([ 'Combat entre ', createNode('b', [ msg.args[0] ]), ' et ', createNode('b', [ msg.args[1] ]), ', resultat :\n', fightLog ]);
 		} else {
-			addLog(['Le combat ne s\'est pas déroulé correctement... Le serveur indique :\n', msg.field0]);
+			addLog([ 'Le combat entre ', createNode('b', [ msg.args[0] ]), ' et ', createNode('b', [ msg.args[1] ]), ' ne s\'est pas déroulé correctement. Le serveur indique :\n', msg.field0]);
 		}
 	}
 }
