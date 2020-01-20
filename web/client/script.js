@@ -8,7 +8,7 @@ const history = document.getElementById('history');
 const board = document.getElementById('board');
 const clear = document.getElementById('clear');
 const logs = document.getElementById('logs');
-logs.id = 0;
+logs.logId = 0;
 
 editor.setTheme('ace/theme/dracula');
 langSel.onchange = e => {
@@ -95,7 +95,7 @@ logs.scroll = (node) => {
 	logs.scrollTop = node.offsetTop - logs.offsetTop;
 }
 const addLog = msg => {
-	logs.id++;
+	logs.logId++;
 	let node = createNode('div', [ createNode('pre', msg) ], {class: 'log wrapped'});
 	logs.appendChild(node);
 	logs.scroll();
@@ -138,17 +138,46 @@ const log = (msg, bar) => {
 		}
 	} else if (msg.cmd === 2) {
 		if (msg.exitCode === 0) {
-			let fightLog = createNode('div', msg.field0.map((e, i) => {
+			let allLogs = [];
+			for (let i in msg.field0) {
+				allLogs.push(msg.field0[i]);
+				if (msg.field1[i] !== undefined) allLogs.push(msg.field1[i]);
+			}
+			let fightLog = createNode('div', allLogs.map((e, i) => {
 				let endLine = e.indexOf('\n');
 				let content = [ createNode('div', [ e.substring(0, endLine) ], {class: 'title'}) ];
 				let min = '';
 				if (e.length-endLine-1 > 0) {
-					content.push(createNode('div', [ e.substring(endLine+1) ], {class: 'margin-1'}));
+					content.push(createNode('div', [ e.substring(endLine+1) ], {class: 'padding-1 in-darken'}));
 					min = ' min';
 				}
-				return createNode('div', content, {class: 'cont flex-a'+min, id: 'log-'+logs.id+'-'+i});
+				return createNode('div', content, {class: 'cont flex-a'+min, id: 'log-'+logs.logId+'-'+i});
 			}), {class: 'flexIn down history'})
-			addLog([ 'Combat entre ', createNode('b', [ msg.args[0] ]), ' et ', createNode('b', [ msg.args[1] ]), ', resultat :\n', fightLog ]);
+			fightLog.logId = '#log-'+logs.logId;
+			fightLog.lineId = -1;
+			fightLog.maxId = allLogs.length;
+			fightLog.unFlash = () => {
+				let line = fightLog.querySelector(fightLog.logId+'-'+fightLog.lineId);
+				if (line) {
+					line.classList.remove('in-flash');
+					line.querySelector('.title').classList.remove('flash');
+				}
+			}
+			fightLog.flash = id => {
+				fightLog.unFlash();
+				fightLog.lineId = id;
+				let line = fightLog.querySelector(fightLog.logId+'-'+id);
+				if (line) {
+					logs.scroll(line);
+					line.classList.add('in-flash');
+					line.querySelector('.title').classList.add('flash');
+				}
+			}
+			let button = createNode('button', [ 'Combat' ], {class: 'flash flex-a margin-1 padding-1'});
+			button.onclick = e => {
+				fightLog.flash(fightLog.lineId+1);
+			}
+			addLog([button, 'entre ', createNode('b', [ msg.args[0] ]), ' et ', createNode('b', [ msg.args[1] ]), ', resultat :\n', fightLog ]);
 		} else {
 			addLog([ 'Le combat entre ', createNode('b', [ msg.args[0] ]), ' et ', createNode('b', [ msg.args[1] ]), ' ne s\'est pas déroulé correctement. Le serveur indique :\n', msg.field0]);
 		}
