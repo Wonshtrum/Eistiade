@@ -8,6 +8,8 @@ const history = document.getElementById('history');
 const board = document.getElementById('board');
 const clear = document.getElementById('clear');
 const logs = document.getElementById('logs');
+const progress = document.getElementById('progress');
+const steps = document.getElementById('steps');
 logs.logId = 0;
 
 editor.setTheme('ace/theme/dracula');
@@ -24,7 +26,7 @@ const minimize = node => {
 	node.querySelectorAll('.min').forEach(div => {
 		let title = div.querySelector('.title');
 		title.querySelectorAll('.title > *').forEach(e => e.onclick = event => event.stopPropagation());
-		title.onclick = e => { div.classList.toggle('flex-t'); };
+		title.onclick = e => { div.classList.toggle('flex-t'); setTimeout(e => editor.resize(), 500); };
 	});
 }
 minimize(document);
@@ -94,6 +96,46 @@ logs.scroll = (node) => {
 	node = node || logs.lastChild;
 	logs.scrollTop = node.offsetTop - logs.offsetTop;
 }
+logs.fightId = 'log-';
+logs.lineId = -1;
+logs.unFlash = () => {
+	let line = logs.querySelector('#'+logs.fightId+logs.lineId);
+	if (line) {
+		line.classList.remove('in-flash');
+		line.querySelector('.title').classList.remove('flash');
+	}
+}
+logs.flash = (id, fightId) => {
+	logs.unFlash();
+	if (fightId) logs.fightId = fightId;
+	fightId = logs.fightId;
+	logs.lineId = id;
+	let line = logs.querySelector('#'+logs.fightId+id);
+	if (line) {
+		logs.scroll(line);
+		line.classList.add('in-flash');
+		line.querySelector('.title').classList.add('flash');
+	}
+	for (let [i, step] of Object.entries(steps.children)) {
+		if (i == id) {
+			step.classList.add('out-lightFlash');
+		} else {
+			step.classList.remove('out-lightFlash');
+		}
+	}
+	progress.style.width = 100*(id+1)/logs.data.history.length+'%';
+}
+logs.setFight = id => {
+	logs.data = logs.querySelector('#'+id).data;
+	steps.innerHTML = '';
+	steps.append(...Array.from({length: logs.data.history.length}, (_, i) => {
+		let node = createNode('div', [], {class: 'out-dark padding-1'})
+		node.onclick = e => logs.flash(i);
+		return node;
+	}));
+	logs.flash(0, id);
+}
+
 const addLog = msg => {
 	logs.logId++;
 	let node = createNode('div', [ createNode('pre', msg) ], {class: 'log wrapped'});
@@ -138,12 +180,14 @@ const log = (msg, bar) => {
 		}
 	} else if (msg.cmd === 2) {
 		if (msg.exitCode === 0) {
-			let allLogs = [];
+			let history = [];
 			for (let i in msg.field0) {
-				allLogs.push(msg.field0[i]);
-				if (msg.field1[i] !== undefined) allLogs.push(msg.field1[i]);
+				history.push(msg.field0[i]);
+				if (msg.field1[i] !== undefined) history.push(msg.field1[i]);
 			}
-			let fightLog = createNode('div', allLogs.map((e, i) => {
+
+			let fightId = 'log-'+logs.logId+'-';
+			let fightLog = createNode('div', history.map((e, i) => {
 				let endLine = e.indexOf('\n');
 				let content = [ createNode('div', [ e.substring(0, endLine) ], {class: 'title'}) ];
 				let min = '';
@@ -151,33 +195,15 @@ const log = (msg, bar) => {
 					content.push(createNode('div', [ e.substring(endLine+1) ], {class: 'padding-1 in-darken'}));
 					min = ' min';
 				}
-				return createNode('div', content, {class: 'cont flex-a'+min, id: 'log-'+logs.logId+'-'+i});
-			}), {class: 'flexIn down history'})
-			fightLog.logId = '#log-'+logs.logId;
-			fightLog.lineId = -1;
-			fightLog.maxId = allLogs.length;
-			fightLog.unFlash = () => {
-				let line = fightLog.querySelector(fightLog.logId+'-'+fightLog.lineId);
-				if (line) {
-					line.classList.remove('in-flash');
-					line.querySelector('.title').classList.remove('flash');
-				}
-			}
-			fightLog.flash = id => {
-				fightLog.unFlash();
-				fightLog.lineId = id;
-				let line = fightLog.querySelector(fightLog.logId+'-'+id);
-				if (line) {
-					logs.scroll(line);
-					line.classList.add('in-flash');
-					line.querySelector('.title').classList.add('flash');
-				}
-			}
+				return createNode('div', content, {class: 'cont flex-a'+min, id: fightId+i});
+			}), {class: 'flexIn down history', id:fightId});
+			msg.history = history;
+			fightLog.data = msg;
+
 			let button = createNode('button', [ 'Combat' ], {class: 'flash flex-a margin-1 padding-1'});
-			button.onclick = e => {
-				fightLog.flash(fightLog.lineId+1);
-			}
+			button.onclick = e => logs.setFight(fightId);
 			addLog([button, 'entre ', createNode('b', [ msg.args[0] ]), ' et ', createNode('b', [ msg.args[1] ]), ', resultat :\n', fightLog ]);
+			button.onclick();
 		} else {
 			addLog([ 'Le combat entre ', createNode('b', [ msg.args[0] ]), ' et ', createNode('b', [ msg.args[1] ]), ' ne s\'est pas déroulé correctement. Le serveur indique :\n', msg.field0]);
 		}

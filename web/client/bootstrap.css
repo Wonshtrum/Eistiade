@@ -7,6 +7,7 @@ html {
 	--flashColor: #f2bb13;
 	--lightFlashColor: #ffcc55;
 	--ideColor: #282a36;
+	--panelIndent: 2px;
 	--margin: 6px;
 	--minW  : 160px;
 	--titleW: 2.5em;
@@ -36,6 +37,8 @@ input {
 }
 img { width: 100%; }
 
+.rel { position: relative; }
+
 .flexIn { display: flex; }
 .flexIn.down { flex-direction: column; }
 .flexIn.right { flex-direction: row; }
@@ -64,12 +67,27 @@ img { width: 100%; }
 .in-prim { background: var(--primColor) !important; }
 .in-dark { background: var(--darkColor) !important; }
 .in-light { background: var(--lightColor) !important; }
+.in-lighter { background: var(--lighterColor) !important; }
 .in-flash { background: var(--flashColor) !important; }
+.in-lightFlash { background: var(--lightFlashColor) !important; }
+.in-ide { background: var(--ideColor) !important; }
 .in-darken { background: #0004 !important; }
 .out-prim { border: 1px solid var(--primColor) !important; }
 .out-dark { border: 1px solid var(--darkColor) !important; }
 .out-light { border: 1px solid var(--lightColor) !important; }
+.out-lighter { border: 1px solid var(--lighterColor) !important; }
 .out-flash { border: 1px solid var(--flashColor) !important; }
+.out-lightFlash { border: 1px solid var(--lightFlashColor) !important; }
+.out-ide { border: 1px solid var(--ide) !important; }
+
+.hov-opac-0:hover { opacity: 0; }
+.hov-opac-1:hover { opacity: 25%; }
+.hov-opac-2:hover { opacity: 50%; }
+.hov-opac-3:hover { opacity: 100%; }
+.opac-0 { opacity: 0%; }
+.opac-1 { opacity: 25%; }
+.opac-2 { opacity: 50%; }
+.opac-3 { opacity: 100%; }
 
 .cont {
 	display: flex;
@@ -83,7 +101,10 @@ img { width: 100%; }
 	margin: var(--margin);
 	overflow: auto;
 }
-.cont > .panel { background: var(--ideColor); }
+.cont > .panel {
+	background: var(--ideColor);
+	margin: var(--panelIndent);
+}
 
 .big {
 	font-weight: 700;
@@ -104,6 +125,7 @@ img { width: 100%; }
 	height: 1.9em;
 	right: var(--margin);
 }
+.min > .title > .right { right: calc(1.8em + 2 * var(--margin)); }
 .min > .title:hover { background: var(--lightColor); }
 .min > .title::after {
 	content: "✖";

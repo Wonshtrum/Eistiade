@@ -25,7 +25,15 @@
 			<div class='flexIn down'>
 				<div class='cont flex-3 min'>
 					<div class='title big'>Jeu</div>
-					<div class='panel'></div>
+					<div class='panel rel'>
+						<canvas class='in-dark'></canvas>
+						<div id='rightIcon' class='panel icon'></div>
+						<div id='leftIcon' class='panel icon'></div>
+						<div id='range' class='flexIn rel in-lighter'>
+							<div id='progress' class='in-flash'></div>
+							<div id='steps' class='flexIn'></div>
+						</div>
+					</div>
 				</div>
 				<div class='cont flex-2 min'>
 					<div class='title big'>Sortie console<button id='clear' class='flash right'>vider</button></div>
@@ -34,22 +42,24 @@
 			</div>
 			
 			<!-- RIGHT PANEL -->
-			<div class='cont'>
-				<div class='title big'>Editeur <input id='nameIn' type='text'/>
-				<div id='langCont' class='select right'>
-					<select id='langSel' class='flash'>
-						<option name='' lang=''>Text</option>
-						<option name='python3' lang='python'>Python3</option>
-						<option name='python2' lang='python'>Python2</option>
-						<option name='java' lang='java'>Java</option>
-						<option name='c++' lang='c_cpp'>C++</option>
-						<option name='c' lang='c_cpp'>C</option>
-					</select>
-				</div>
+			<div class='flexIn down'>
+				<div class='cont min'>
+					<div class='title big'>Editeur <input id='nameIn' type='text'/>
+					<div id='langCont' class='select right'>
+						<select id='langSel' class='flash'>
+							<option name='' lang=''>Text</option>
+							<option name='python3' lang='python'>Python3</option>
+							<option name='python2' lang='python'>Python2</option>
+							<option name='java' lang='java'>Java</option>
+							<option name='c++' lang='c_cpp'>C++</option>
+							<option name='c' lang='c_cpp'>C</option>
+						</select>
+					</div>
 
-				</div>
-				<div class='flexIn panel'>
-					<div id=editor></div>
+					</div>
+					<div class='flexIn panel'>
+						<div id=editor></div>
+					</div>
 				</div>
 			</div>
 		</div>

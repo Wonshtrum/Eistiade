@@ -4,8 +4,8 @@
 	margin-bottom: calc(-2 * var(--margin));
 }
 
-#langCont {
-	right: var(--margin);
+#langConta {
+	margin-right: calc(-1 * var(--margin));
 }
 
 #nameIn {
@@ -30,10 +30,37 @@ div.debug {
 
 #menu > .flexIn {
 	height: 100px;
-	line-height: calc(100px - 1em);
+	line-height: 100px;
 	text-align: center;
 }
 
 #logs {
 	scroll-behavior: smooth;
+}
+
+canvas {
+	width: 100%;
+	padding-top: 50%;
+	height: 0;
+}
+
+.icon {
+	position: absolute;
+	width: 10%;
+	padding-top: 10%;
+	top: 0;
+}
+#rightIcon { right: 0; }
+#leftIcon { left: 0; }
+
+#progress {
+	position: absolute;
+	height: 100%;
+	width: 50%;
+	transition: width .5s;
+}
+#steps { z-index: 1; }
+#steps div:hover {
+	background: white;
+	opacity: 50%;
 }
