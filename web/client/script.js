@@ -10,7 +10,8 @@ const clear = document.getElementById('clear');
 const logs = document.getElementById('logs');
 const progress = document.getElementById('progress');
 const steps = document.getElementById('steps');
-logs.logId = 0;
+const play = document.getElementById('play');
+const opponantIn = document.getElementById('opponantIn');
 
 editor.setTheme('ace/theme/dracula');
 langSel.onchange = e => {
@@ -59,7 +60,8 @@ submit.onclick = e => {
 }
 fight.onclick = e => {
 	let name = nameIn.value;
-	let data = { args: [2, name, name] };
+	let opponant = opponantIn.value;
+	let data = { args: [2, name, opponant] };
 	let bar = loading();
 	$.ajax({
 		url: '/submit',
@@ -92,12 +94,17 @@ const createNode = (type, elements, options) => {
 	return node;
 }
 
+logs.logId = 0;
+logs.fightId = 'log-';
+logs.lineId = -1;
+logs.play = true;
+logs.wait = 500;
+logs.next = 0;
+
 logs.scroll = (node) => {
 	node = node || logs.lastChild;
 	logs.scrollTop = node.offsetTop - logs.offsetTop;
 }
-logs.fightId = 'log-';
-logs.lineId = -1;
 logs.unFlash = () => {
 	let line = logs.querySelector('#'+logs.fightId+logs.lineId);
 	if (line) {
@@ -110,23 +117,36 @@ logs.flash = (id, fightId) => {
 	if (fightId) logs.fightId = fightId;
 	fightId = logs.fightId;
 	logs.lineId = id;
-	let line = logs.querySelector('#'+logs.fightId+id);
-	if (line) {
-		logs.scroll(line);
-		line.classList.add('in-flash');
-		line.querySelector('.title').classList.add('flash');
-	}
-	for (let [i, step] of Object.entries(steps.children)) {
-		if (i == id) {
-			step.classList.add('out-lightFlash');
-		} else {
-			step.classList.remove('out-lightFlash');
+	if (id < logs.data.history.length) {
+		progress.style.width = 100*(id+1)/logs.data.history.length+'%';
+		logs.game.play(id);
+		let line = logs.querySelector('#'+logs.fightId+id);
+		if (line) {
+			logs.scroll(line);
+			line.classList.add('in-flash');
+			line.querySelector('.title').classList.add('flash');
 		}
+		for (let [i, step] of Object.entries(steps.children)) {
+			if (i == id) step.classList.add('out-lightFlash');
+			else step.classList.remove('out-lightFlash');
+		}
+		if (id < logs.data.history.length-1 && logs.play) logs.next = setTimeout(e => logs.flash(id+1), logs.wait);
+		else logs.play = false;
 	}
-	progress.style.width = 100*(id+1)/logs.data.history.length+'%';
+}
+play.onclick = e => {
+	let lineId = logs.lineId+1;
+	if (lineId === logs.data.history.length && !logs.play) {
+		lineId = 0;
+	}
+	logs.play = true;
+	logs.flash(lineId);
 }
 logs.setFight = id => {
+	clearTimeout(logs.next);
+	logs.play = true;
 	logs.data = logs.querySelector('#'+id).data;
+	logs.game = game(logs.data.field2);
 	steps.innerHTML = '';
 	steps.append(...Array.from({length: logs.data.history.length}, (_, i) => {
 		let node = createNode('div', [], {class: 'out-dark padding-1'})
@@ -136,9 +156,11 @@ logs.setFight = id => {
 	logs.flash(0, id);
 }
 
-const addLog = msg => {
+const addLog = (msg, options) => {
 	logs.logId++;
-	let node = createNode('div', [ createNode('pre', msg) ], {class: 'log wrapped'});
+	options = options || {class: ''};
+	options.class += ' log wrapped';
+	let node = createNode('div', [ createNode('pre', msg) ], options);
 	logs.appendChild(node);
 	logs.scroll();
 	node.classList.remove('wrapped');
@@ -165,7 +187,11 @@ const loading = () => {
 	return bar;
 }
 const log = (msg, bar) => {
-	if (bar) { bar.stop(); }
+	if (bar) bar.stop();
+	if (msg.exitCode === 2) {
+		addLog([ msg.field0 ], {class: 'debug'});
+		return;
+	}
 	if (msg.cmd === 0) {
 		if (msg.exitCode === 0) {
 			addLog([ createNode('b', [ msg.args[0] ]), ' a compilé sans erreurs !' ]);
@@ -195,7 +221,7 @@ const log = (msg, bar) => {
 					content.push(createNode('div', [ e.substring(endLine+1) ], {class: 'padding-1 in-darken'}));
 					min = ' min';
 				}
-				return createNode('div', content, {class: 'cont flex-a'+min, id: fightId+i});
+				return createNode('div', content, {class: 'cont flex-a line'+min, id: fightId+i});
 			}), {class: 'flexIn down history', id:fightId});
 			msg.history = history;
 			fightLog.data = msg;

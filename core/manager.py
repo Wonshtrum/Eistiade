@@ -68,8 +68,9 @@ def polling(config):
         print(lastIndex)
         while True:
             sleep(interval)
-            cursor.execute('SELECT * FROM Requests WHERE id > %s', (lastIndex,))
-            lines = cursor.fetchall()
+            with lock:
+                cursor.execute('SELECT * FROM Requests WHERE id > %s', (lastIndex,))
+                lines = cursor.fetchall()
             print("Polling[{}]".format(len(lines)))
             for line in lines:
                 if factory.newWork(line[0], work(line)):

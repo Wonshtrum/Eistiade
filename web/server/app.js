@@ -28,7 +28,7 @@ app.post('/submit', function(req, res) {
 	let [cmd, arg0, arg1, arg2] = req.body['args[]'];
 	let args = [arg0, arg1, arg2];
 	let stmt = sql.format('INSERT INTO Requests(cmd, arg0, arg1, arg2, author) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, 'Default']);
-	listenDb(stmt, cmd, args, line => {console.log('end', line); res.send(line)});
+	listenDb(stmt, cmd, args, line => {res.send(line)});
 })
 app.get('/dbCore', function(req, res) {
 	db.query('SELECT * FROM Results', function(err, data) {
@@ -59,8 +59,10 @@ const db = sql.createConnection(config)
 
 let _listenDb = function() {
 	for (let [i, req] of Object.entries(listenDb.queue).reverse()) {
+		console.log(req.stmt);
 		db.query(req.stmt, function(err, data) {
 			if (data.length == 1) {
+				listenDb.queue.splice(i, 1);
 				data = data[0];
 				if (req.cmd == 2 && data.exitCode == 0) {
 					data.field0 = JSON.parse(data.field0);
@@ -68,8 +70,12 @@ let _listenDb = function() {
 					data.field2 = JSON.parse(data.field2);
 				}
 				data.args = req.args;
-				listenDb.queue.splice(i, 1);
+				console.log(data);
 				req.callback(data);
+			} else if (++req.timeout > config.timeout) {
+				listenDb.queue.splice(i, 1);
+				console.log('Timeout');
+				req.callback({exitCode: 2, field0: 'Sorry your request timed out for an unknown reason...'});
 			} else {
 				console.log(err, data);
 			}
@@ -87,7 +93,7 @@ let listenDb = function(inStmt, cmd, args, callback, outStmt) {
 	db.query(inStmt);
 	outStmt = outStmt || 'SELECT * FROM Results WHERE id = '+(++listenDb.id);
 	console.log("---", listenDb.id);
-	listenDb.queue.push({stmt:outStmt, cmd:cmd, args:args, callback:callback});
+	listenDb.queue.push({stmt:outStmt, cmd:cmd, args:args, callback:callback, timeout:0});
 	if (!listenDb.active) {
 		console.log("ACTIVATE");
 		listenDb.active = true;

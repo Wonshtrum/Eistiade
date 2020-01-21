@@ -26,13 +26,14 @@
 				<div class='cont flex-3 min'>
 					<div class='title big'>Jeu</div>
 					<div class='panel rel'>
-						<canvas class='in-dark'></canvas>
+						<canvas id='canvas' class='in-dark'></canvas>
 						<div id='rightIcon' class='panel icon'></div>
 						<div id='leftIcon' class='panel icon'></div>
 						<div id='range' class='flexIn rel in-lighter'>
 							<div id='progress' class='in-flash'></div>
 							<div id='steps' class='flexIn'></div>
 						</div>
+						<button id='play' class='flash'>play</button>
 					</div>
 				</div>
 				<div class='cont flex-2 min'>
@@ -44,7 +45,9 @@
 			<!-- RIGHT PANEL -->
 			<div class='flexIn down'>
 				<div class='cont min'>
-					<div class='title big'>Editeur <input id='nameIn' type='text'/>
+					<div class='title big'>Editeur
+					<input id='nameIn' type='text'/>
+					<input id='opponantIn' type='text'/>
 					<div id='langCont' class='select right'>
 						<select id='langSel' class='flash'>
 							<option name='' lang=''>Text</option>
@@ -67,4 +70,5 @@
 </body>
 </html>
 
+<script src='game.js'></script>
 <script src='script.js'></script>

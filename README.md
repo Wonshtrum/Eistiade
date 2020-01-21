@@ -9,7 +9,8 @@ Clone repository, create the Database in your MySQL server by sourcing the file 
     "password":"YOUR_PASSWORD",
     "database":"Eistiade",
     "interval":2000,
-    "nbWorkers":8
+    "nbWorkers":8,
+    "timeout":10
 }
 ```
 The game played can be modified by changing the file `core/game.py` and following the example given. If necessary change the fight loop of the `core/core.py` file.
