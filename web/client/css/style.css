@@ -40,8 +40,7 @@
 
 canvas {
 	width: 100%;
-	padding-top: 50%;
-	height: 0;
+	image-rendering: crisp-edges;
 }
 
 .icon {

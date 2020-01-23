@@ -113,6 +113,7 @@ logs.unFlash = () => {
 	}
 }
 logs.flash = (id, fightId) => {
+	clearTimeout(logs.next);
 	logs.unFlash();
 	if (fightId) logs.fightId = fightId;
 	fightId = logs.fightId;
@@ -135,10 +136,9 @@ logs.flash = (id, fightId) => {
 	}
 }
 play.onclick = e => {
+	if (logs.play) return;
 	let lineId = logs.lineId+1;
-	if (lineId === logs.data.history.length && !logs.play) {
-		lineId = 0;
-	}
+	if (lineId === logs.data.history.length) lineId = 0;
 	logs.play = true;
 	logs.flash(lineId);
 }

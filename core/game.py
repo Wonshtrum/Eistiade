@@ -22,12 +22,17 @@ class Game:
     def win(self, id, state=None):
         self.winner = id
         self.log['win']['id'] = id
-        self.log['win']['state'] = state
+        if state is None:
+            self.log['win']['state'] = None
+        else:
+            self.log['win']['state'].extend(state)
     def _check(self, i, j, k, id, align):
+        if align == 0:
+            self.log['win']['state'] = [i, j]
         if self.matrix[i][j] == id:
             align += 1
             if align >= self.goal:
-                self.win(id, [i, j, k])
+                self.win(id, [i, j])
                 return True, align
             return False, align
         else:
