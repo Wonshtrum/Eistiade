@@ -60,53 +60,41 @@ const db = sql.createConnection(config)
 
 const callCore = () => request.post('http://localhost:'+config.linkPort+'/event');
 
-const _listenDb = function() {
-	if (listenDb.queue.length == 0) {
-		listenDb.active = false;
-		return;
-	}
-	callCore();
-	for (let [i, req] of Object.entries(listenDb.queue).reverse()) {
-		console.log(req.stmt);
-		db.query(req.stmt, function(err, data) {
-			if (data.length == 1) {
-				listenDb.queue.splice(i, 1);
-				data = data[0];
-				if (req.cmd == 2 && data.exitCode == 0) {
-					data.field0 = JSON.parse(data.field0);
-					data.field1 = JSON.parse(data.field1);
-					data.field2 = JSON.parse(data.field2);
-				}
-				data.args = req.args;
-				console.log(data);
-				req.callback(data);
-			} else if (++req.timeout > config.timeout) {
-				listenDb.queue.splice(i, 1);
-				console.log('Timeout');
-				req.callback({exitCode: 2, field0: 'Sorry your request timed out for an unknown reason...'});
-			} else {
-				console.log(err, data);
+app.post('/result', function(req, res) {
+	res.send();
+	let id = req.body.id;
+	console.log('COMMING', req);
+	req = listenDb.queue[id];
+	if (!req) return;
+	console.log(req.stmt);
+	db.query(req.stmt, function(err, data) {
+		if (data.length == 1) {
+			data = data[0];
+			if (req.cmd == 2 && data.exitCode == 0) {
+				data.field0 = JSON.parse(data.field0);
+				data.field1 = JSON.parse(data.field1);
+				data.field2 = JSON.parse(data.field2);
 			}
-		});
-	}
-	setTimeout(_listenDb, config.interval);
-}
+			data.args = req.args;
+			console.log(data);
+			req.callback(data);
+		} else {
+			console.log(err, data);
+			req.callback({exitCode: 2, field0: 'Sorry something wen\'t wrong on the server side...'});
+		}
+		delete listenDb.queue[id];
+	});
+});
 
 const listenDb = function(inStmt, cmd, args, callback, outStmt) {
 	db.query(inStmt);
-	outStmt = outStmt || 'SELECT * FROM Results WHERE id = '+(++listenDb.id);
-	console.log("---", listenDb.id);
-	listenDb.queue.push({stmt:outStmt, cmd:cmd, args:args, callback:callback, timeout:0});
-	if (!listenDb.active) {
-		console.log("ACTIVATE");
-		listenDb.active = true;
-		_listenDb();
-	} else {
-		callCore();
-	}
+	let id = ++listenDb.id;
+	outStmt = outStmt || 'SELECT * FROM Results WHERE id = '+(id);
+	console.log("---", id);
+	listenDb.queue[id] = {id:id, stmt:outStmt, cmd:cmd, args:args, callback:callback, timeout:0};
+	callCore();
 }
-listenDb.active = false;
-listenDb.queue = [];
+listenDb.queue = {};
 db.query('SELECT MAX(id) AS id FROM Requests', function(err, data) {
 	listenDb.id = data[0].id || 0;
 	console.log('LastIndex:', listenDb.id);

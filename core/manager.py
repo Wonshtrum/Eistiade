@@ -6,15 +6,17 @@ from time import sleep, time
 from threading import Thread, RLock
 from works import *
 from hook import *
+from requests import post as callApp
 
 lock = RLock()
 class Worker(Thread):
-    def __init__(self, workerId, db):
+    def __init__(self, workerId, db, callback):
         self.id = workerId
         self.db = db
         self.working = False
         self.requestId = None
         self.work = None
+        self.callback = callback
     def run(self):
         start = time()
         exitCode, field0, field1, field2 = self.work.process()
@@ -25,6 +27,7 @@ class Worker(Thread):
                 if self.work.sql and exitCode == 0:
                     cursor.execute(self.work.sql, self.work.inserts)
         self.working = False
+        self.callback(self.requestId)
     def give(self, requestId, work):
         if self.working:
             raise Exception
@@ -35,9 +38,9 @@ class Worker(Thread):
         self.start()
 
 class WorkerManager:
-    def __init__(self, nbWorkers, db):
+    def __init__(self, nbWorkers, db, callback):
         self.nbWorkers = nbWorkers
-        self.workers = [Worker(workerId, db) for workerId in range(nbWorkers)]
+        self.workers = [Worker(workerId, db, callback) for workerId in range(nbWorkers)]
     def newWork(self, requestId, work):
         for worker in self.workers:
             if not worker.working:
@@ -54,7 +57,7 @@ class Poller:
                 autocommit=True)
         self.cursor = self.db.cursor()
         self.cursor.execute('SELECT MAX(id) AS id FROM Results')
-        self.factory = WorkerManager(config['nbWorkers'], self.db)
+        self.factory = WorkerManager(config['nbWorkers'], self.db, self.endWork)
         self.lastIndex = self.cursor.fetchone()[0] or 0
         print('LastRequest:', self.lastIndex)
         self.reload()
@@ -69,6 +72,10 @@ class Poller:
             author, name, lang, status = line
             ai = AI(author, name, lang)
             ai.register(False)
+
+    def endWork(self, requestId):
+        callApp(url='http://localhost:8080/result', data={'id':requestId})
+        self.poll()
 
     def poll(self):
         with lock:
