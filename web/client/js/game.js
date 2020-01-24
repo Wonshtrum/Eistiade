@@ -1,10 +1,11 @@
-let canvas = document.getElementById('canvas');
-let ctx = canvas.getContext('2d');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
 const rightIcon = document.getElementById('rightIcon');
 const leftIcon = document.getElementById('leftIcon');
 
-canvas.width = 100;
-canvas.height = 50;
+canvas.width = 1000;
+canvas.height = 500;
+const colors = ['#000', '#f00', '#00f'];
 const game = function(data) {
 	/*iconLeft.innerHTML = data.ai1;
 	iconRight.innerHTML = data.ai2;*/
@@ -14,7 +15,7 @@ const game = function(data) {
 		h: data.h,
 		moves: data.moves,
 		end: data.moves.length-1,
-		win: data.win.state
+		win: data.win
 	};
 	self.move = (col, id) => {
 		let row = -1;
@@ -35,25 +36,25 @@ const game = function(data) {
 		self.draw(turn == self.end);
 	}
 	self.draw = win => {
+		let d = 10;
 		let [w, h] = [canvas.width, canvas.height];
 		let c = Math.floor(Math.min(w/self.w, h/self.h));
-		let [dx, dy] = [Math.floor(1+(w-c*self.w)/2), Math.floor(1+(h-c*self.h)/2)]
+		let [dx, dy] = [Math.floor(d+(w-c*self.w)/2), Math.floor(d+(h-c*self.h)/2)]
 		ctx.clearRect(0, 0, w, h);
 		for (let i=0 ; i<self.w ; i++) {
 			for (let j=0 ; j<self.h ; j++) {
-				ctx.fillStyle = ['#000','#f00','#00f'][self.matrix[j][i]];
-				ctx.fillRect(dx+i*c, dy+j*c, c-2, c-2);
+				ctx.fillStyle = colors[self.matrix[j][i]];
+				ctx.fillRect(dx+i*c, dy+j*c, c-d*2, c-d*2);
 			}
 		}
-		if (win && self.win) {
-			let [ay, ax, by, bx] = self.win.map(e => Math.floor(c*(e+.5)));
-			ctx.strokeStyle = '#fff';
-			ctx.lineWidth = 2;
+		if (win && self.win.state) {
+			let [ay, ax, by, bx] = self.win.state.map(e => Math.floor(c*(e+.5)-d));
+			ctx.strokeStyle = '#fffc';
+			ctx.lineWidth = d*2;
 			ctx.beginPath();
-			ctx.moveTo(dx+ax-1, dy+ay-1)
-			ctx.lineTo(dx+bx-1, dy+by-1);
+			ctx.moveTo(dx+ax, dy+ay)
+			ctx.lineTo(dx+bx, dy+by);
 			ctx.stroke();
-			console.log(ax, ay, bx, by, c);
 		}
 	}
 	return self;

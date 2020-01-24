@@ -25,7 +25,6 @@ def thread(maxTime, f, wait=False, otherwise=None):
                 res = []
                 for _ in range(size):
                     try:
-                        #TODO prevent overflow deadlock
                         res.append(queue.get(block=False))
                     except:
                         res.append("\n-- DATA UNAVAILABLE IN TIME --\n[AT LEAST {} LINES SKIPPED]\n".format(size - _))

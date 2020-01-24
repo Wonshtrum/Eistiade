@@ -6,12 +6,13 @@ const express    = require("express");
 const bodyParser = require("body-parser");
 const sql        = require('mysql');
 const fs         = require('fs');
+const request    = require('request');
 const app        = express();
 const __web      = __dirname.slice(0, __dirname.lastIndexOf('/'));
 const __root     = __web.slice(0, __web.lastIndexOf('/'));
 const __client   = __web + '/client';
 const __db       = __root + '/db';
-console.log(__root);
+console.log('Root directory:', __root);
 
 
 /////////////////////////////////////////////
@@ -57,7 +58,14 @@ console.log('Server started.');
 const config = JSON.parse(fs.readFileSync(__db + '/secret.json'));
 const db = sql.createConnection(config)
 
-let _listenDb = function() {
+const callCore = () => request.post('http://localhost:'+config.linkPort+'/event');
+
+const _listenDb = function() {
+	if (listenDb.queue.length == 0) {
+		listenDb.active = false;
+		return;
+	}
+	callCore();
 	for (let [i, req] of Object.entries(listenDb.queue).reverse()) {
 		console.log(req.stmt);
 		db.query(req.stmt, function(err, data) {
@@ -81,15 +89,10 @@ let _listenDb = function() {
 			}
 		});
 	}
-	if (listenDb.queue.length) {
-		setTimeout(_listenDb, config.interval);
-	} else {
-		listenDb.active = false;
-	}
+	setTimeout(_listenDb, config.interval);
 }
 
-let listenDb = function(inStmt, cmd, args, callback, outStmt) {
-	console.log(inStmt);
+const listenDb = function(inStmt, cmd, args, callback, outStmt) {
 	db.query(inStmt);
 	outStmt = outStmt || 'SELECT * FROM Results WHERE id = '+(++listenDb.id);
 	console.log("---", listenDb.id);
@@ -98,14 +101,13 @@ let listenDb = function(inStmt, cmd, args, callback, outStmt) {
 		console.log("ACTIVATE");
 		listenDb.active = true;
 		_listenDb();
+	} else {
+		callCore();
 	}
 }
-listenDb.id = 0;
 listenDb.active = false;
 listenDb.queue = [];
 db.query('SELECT MAX(id) AS id FROM Requests', function(err, data) {
-	console.log(err, data, data[0].id);
-	listenDb.id = data[0].id;
+	listenDb.id = data[0].id || 0;
+	console.log('LastIndex:', listenDb.id);
 });
-
-//db.close();

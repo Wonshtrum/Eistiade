@@ -5,6 +5,7 @@ from json import load as fromJson
 from time import sleep, time
 from threading import Thread, RLock
 from works import *
+from hook import *
 
 lock = RLock()
 class Worker(Thread):
@@ -44,45 +45,46 @@ class WorkerManager:
                 return True
         return False
 
-def reload(db):
-    with db.cursor() as cursor:
-        cursor.execute('SELECT * FROM Agents')
-        for line in cursor.fetchall():
+class Poller:
+    def __init__(self, config):
+        self.db = sql.connect(host=config['host'],
+                user=config['user'],
+                passwd=config['password'],
+                db=config['database'],
+                autocommit=True)
+        self.cursor = self.db.cursor()
+        self.cursor.execute('SELECT MAX(id) AS id FROM Results')
+        self.factory = WorkerManager(config['nbWorkers'], self.db)
+        self.lastIndex = self.cursor.fetchone()[0] or 0
+        print('LastRequest:', self.lastIndex)
+        self.reload()
+        self.listener = Listener(port=config['linkPort'])
+        self.listener.bind('/event', self.poll)
+        self.listener.start()
+
+    def reload(self):
+        self.cursor.execute('SELECT * FROM Agents')
+        for line in self.cursor.fetchall():
             print(line)
             author, name, lang, status = line
             ai = AI(author, name, lang)
             ai.register(False)
 
-def polling(config):
-    db = sql.connect(host=config['host'],
-            user=config['user'],
-            passwd=config['password'],
-            db=config['database'],
-            autocommit=True)
-    reload(db)
-    factory = WorkerManager(config['nbWorkers'], db)
-    interval = config['interval']/1000
-    with db.cursor() as cursor:
-        cursor.execute('SELECT MAX(id) AS id FROM Results')
-        lastIndex = cursor.fetchone()[0] or 0
-        print(lastIndex)
-        while True:
-            sleep(interval)
-            with lock:
-                cursor.execute('SELECT * FROM Requests WHERE id > %s', (lastIndex,))
-                lines = cursor.fetchall()
+    def poll(self):
+        with lock:
+            self.cursor.execute('SELECT * FROM Requests WHERE id > %s', (self.lastIndex,))
+            lines = self.cursor.fetchall()
             print("Polling[{}]".format(len(lines)))
             for line in lines:
-                if factory.newWork(line[0], work(line)):
-                    lastIndex = line[0]
+                if self.factory.newWork(line[0], work(line)):
+                    self.lastIndex = line[0]
                     print(line[0])
                 else:
                     break
-    db.close()
 
 if __name__ == '__main__':
     dbDir = '../db'
     dbConfigFile = '{}/secret.json'.format(dbDir)
     with open(dbConfigFile) as f:
         config = fromJson(f)
-    polling(config)
+    Poller(config)
