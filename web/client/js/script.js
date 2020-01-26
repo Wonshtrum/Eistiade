@@ -4,6 +4,7 @@ const nameIn = document.getElementById('nameIn');
 const test = document.getElementById('test');
 const submit = document.getElementById('submit');
 const fight = document.getElementById('fight');
+const goFight = document.getElementById('goFight');
 const history = document.getElementById('history');
 const board = document.getElementById('board');
 const clear = document.getElementById('clear');
@@ -11,7 +12,10 @@ const logs = document.getElementById('logs');
 const progress = document.getElementById('progress');
 const steps = document.getElementById('steps');
 const play = document.getElementById('play');
-const opponantIn = document.getElementById('opponantIn');
+const fighter1 = document.getElementById('fighter1');
+const fighter2 = document.getElementById('fighter2');
+const popupContainer = document.getElementById('popup-container')
+const login = document.getElementById('login');
 
 editor.setTheme('ace/theme/dracula');
 langSel.onchange = e => {
@@ -59,9 +63,14 @@ submit.onclick = e => {
 	});
 }
 fight.onclick = e => {
-	let name = nameIn.value;
-	let opponant = opponantIn.value;
-	let data = { args: [2, name, opponant] };
+	loadPopup('#fightPopup');
+	showPopup();
+}
+goFight.onclick = e => {
+	hidePopup();
+	let ai1 = fighter1.value;
+	let ai2 = fighter2.value;
+	let data = { args: [2, ai1, ai2] };
 	let bar = loading();
 	$.ajax({
 		url: '/submit',
@@ -235,3 +244,19 @@ const log = (msg, bar) => {
 		}
 	}
 }
+
+const maskingPopup = node => node.querySelectorAll('.popup').forEach(e => e.onclick = event => event.stopPropagation());
+maskingPopup(popupContainer);
+
+const loadPopup = popup => {
+	popupContainer.querySelectorAll('.popup').forEach(e => e.classList.add('invisible'));
+	popupContainer.querySelector(popup).classList.remove('invisible');
+}
+const showPopup = () => {
+	popupContainer.classList.remove('wrapped');
+}
+const hidePopup = () => {
+	popupContainer.classList.add('wrapped');
+}
+popupContainer.onclick = hidePopup;
+login.onclick = () => loadPopup('#login');

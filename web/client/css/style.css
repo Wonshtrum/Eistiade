@@ -2,6 +2,11 @@
 	color: white;
 	line-height: var(--titleW);
 	margin-bottom: calc(-2 * var(--margin));
+	padding-left: 1em;
+}
+#header > .right {
+	position: absolute;
+	right: calc(2 * var(--margin));
 }
 
 #langConta {

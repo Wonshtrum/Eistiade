@@ -73,7 +73,7 @@ class Poller:
             ai = AI(author, name, lang)
             ai.register(False)
 
-    def endWork(self, requestId):
+    def endWork(self,requestId):
         callApp(url='http://localhost:8080/result', data={'id':requestId})
         self.poll()
 

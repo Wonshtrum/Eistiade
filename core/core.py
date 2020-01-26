@@ -65,8 +65,9 @@ def fight(ai1, ai2):
                     data = thread(1, player.listen)()
                     errorIf(player.poll() is not None)
                     player.logEntry('{} played: "{}",'.format(player.baseName, data))
-                except:
+                except Exception as E:
                     player.logEntry('ended')
+                    raise E
                 finally:
                     player.logEntry(' after {:.5f}s.\n'.format(time()-start))
                     player.collectLogs()
@@ -87,6 +88,12 @@ def fight(ai1, ai2):
                 game.win(3-player.id)
                 if type(E) == ErrorWithMessage:
                     player.logEntry(E.msg)
+                else:
+                    print("//////////////////////////////////////////")
+                    print("//////////////////////////////////////////")
+                    print(E)
+                    print("//////////////////////////////////////////")
+                    print("//////////////////////////////////////////")
                 break
 
     for player in (player1, player2):

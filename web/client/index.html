@@ -1,6 +1,6 @@
 <link rel='stylesheet' type='text/css' href='css/bootstrap.css'/>
 <link rel='stylesheet' type='text/css' href='css/style.css'/>
-<link rel="icon" type="image/png" href="img/icon.png"/>
+<link rel='icon' type='image/png' href='img/icon.png'/>
 
 <script src='js/ace/ace.js' type='text/javascript' charset='utf-8'></script>
 <script src='js/ace/dracula.js' type='text/javascript' charset='utf-8'></script>
@@ -22,7 +22,11 @@
 
 	<div class='flexIn down'>
 		<!-- HEADER -->
-		<div id='header' class='big flexIn flex-t'>EISTIADE.v1</div>
+		<div id='header' class='big flex-t'>EISTIADE.v1
+			<span class='right'>
+				<span id='login' class='pointer hov-opac-2'>connexion</span>
+			</span>
+		</div>
 
 		<div class='flexIn margin-1'>
 			<!-- LEFT PANEL -->
@@ -37,7 +41,7 @@
 							<div id='progress' class='in-flash'></div>
 							<div id='steps' class='flexIn'></div>
 						</div>
-						<button id='play' class='flash'>play</button>
+						<button id='play' class='flash padding-1'>play</button>
 					</div>
 				</div>
 				<div class='cont flex-2 min'>
@@ -51,7 +55,6 @@
 				<div class='cont min'>
 					<div class='title big'>Editeur
 					<input id='nameIn' type='text'/>
-					<input id='opponantIn' type='text'/>
 					<div id='langCont' class='select right'>
 						<select id='langSel' class='flash'>
 							<option name='' lang=''>Text</option>
@@ -67,6 +70,46 @@
 						<div id=editor></div>
 					</div>
 				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- POPUPS -->
+	<div id='popup-container' class='popup-container'>
+		<!-- LOGIN POPUP -->
+		<div id='loginPopup' class='popup in-dark padding-1'>
+			<div class='panel'>
+				<div class='title big'>Connexion</div>
+				<div class='margin-1'>Pseudo</div>
+				<input class='margin-1'>
+				<div class='margin-1'>Mot de passe</div>
+				<input class='margin-1'/>
+				<button class='flash padding-1 margin-1'>OK</button>
+			</div>
+			<div class='panel'>
+				<div class='title big'>Inscription</div>
+				<div class='margin-1'>Pseudo</div>
+				<input class='margin-1'>
+				<div class='margin-1'>Mot de passe</div>
+				<input class='margin-1'/>
+				<button class='flash padding-1 margin-1'>OK</button>
+			</div>
+		</div>
+		<!-- FIGHT POPUP -->
+		<div id='fightPopup' class='popup in-dark padding-1 invisible'>
+			<div class='panel'>
+				<div class='title big margin-1'>Combat</div>
+				<div class='flexIn'>
+					<div>
+						<div class='margin-1'>AI1</div>
+						<input id='fighter1' class='margin-1'/>
+					</div>
+					<div>
+						<div class='margin-1'>AI2</div>
+						<input id='fighter2' class='margin-1'/>
+					</div>
+				</div>
+				<button id='goFight' class='flash padding-1 margin-1'>OK</button>
 			</div>
 		</div>
 	</div>

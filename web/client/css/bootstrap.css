@@ -40,7 +40,7 @@ img { width: 100%; }
 
 .rel { position: relative; }
 
-.flexIn { display: flex; }
+.flexIn, .flex { display: flex; }
 .flexIn.down { flex-direction: column; }
 .flexIn.right { flex-direction: row; }
 .flexIn > * {
@@ -54,6 +54,7 @@ img { width: 100%; }
 .padding-0  { padding: 0 !important; }
 .padding-05 { padding: calc(var(--margin) / 2) !important; }
 .padding-1  { padding: var(--margin) !important; }
+
 .flex-0 { flex: 0 1 0 !important; }
 .flex-1 { flex: 1 1 0 !important; }
 .flex-2 { flex: 2 1 0 !important; }
@@ -65,11 +66,12 @@ img { width: 100%; }
 .flex-t { flex: 0 1 var(--titleW) !important; }
 .flex-m { flex-basis: var(--minW) !important; }
 .noFlex { flex: none !important; }
+
 .in-prim { background: var(--primColor) !important; }
 .in-dark { background: var(--darkColor) !important; }
 .in-light { background: var(--lightColor) !important; }
 .in-lighter { background: var(--lighterColor) !important; }
-.in-flash { background: var(--flashColor) !important; }
+.in-flash { background: var(--flashColor) !important; color: var(--blackColor); }
 .in-lightFlash { background: var(--lightFlashColor) !important; }
 .in-ide { background: var(--ideColor) !important; }
 .in-darken { background: #0004 !important; }
@@ -90,6 +92,11 @@ img { width: 100%; }
 .opac-2 { opacity: .5; }
 .opac-3 { opacity: 1; }
 
+.invisible { display: none !important; }
+.block { display: block !important; }
+.pointer { cursor: pointer; }
+.big { font-weight: 700; }
+
 .cont {
 	display: flex;
 	overflow: hidden !important;
@@ -107,10 +114,6 @@ img { width: 100%; }
 	margin: var(--panelIndent);
 }
 
-.big {
-	font-weight: 700;
-	padding-left: 1em;
-}
 .title {
 	flex: 0 0 var(--titleW) !important;
 	padding-left: var(--margin);
@@ -160,6 +163,7 @@ img { width: 100%; }
 	font-weight: 700;
 	color: var(--blackColor);
 	border: none;
+	cursor: pointer;
 }
 .flash:hover { background: var(--lightFlashColor) !important; }
 
@@ -176,6 +180,33 @@ img { width: 100%; }
 	margin-left: calc(var(--d3) - var(--d3h));
 	margin-bottom: calc(var(--d3) - var(--d3h));
 }
+
+.popup-container {
+	position: absolute;
+	display: flex;
+	background: #0009;
+	top: 0;
+	bottom: 0;
+	right: 0;
+	left: 0;
+	height: 100%;
+	transition: margin 1s, opacity 1s, height 1s;
+	z-index: 10;
+}
+.popup-container.wrapped {
+	margin-top: -30vh;
+	height: 30%;
+	opacity: 0;
+}
+.popup {
+	display: flex;
+	margin: auto;
+	min-width: min-content;
+}
+.popup * {
+	width: -moz-available;
+}
+.popup > div { padding: 2em; }
 
 .select {
 	display: inline-block;
