@@ -21,11 +21,8 @@
 	font-size: 90%;
 }
 
-.log .history {
-	margin-bottom: calc(-1 * var(--margin));
-}
 .log .line, .log .line div {
-	transition: background .5s, color .5s;
+	/*transition: background .2s, color .2s;*/
 }
 
 .debug { 
@@ -45,7 +42,7 @@
 
 canvas {
 	width: 100%;
-	image-rendering: crisp-edges;
+	/*image-rendering: crisp-edges;*/
 }
 
 .icon {

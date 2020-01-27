@@ -1,4 +1,9 @@
+/*==============================================*/
+/*       GLOBAL CHANGES TO HTML ELEMENTS        */
+/*==============================================*/
 html {
+	/* CONSTANTES */
+	/* - colors */
 	--primColor: #252e38;
 	--darkColor: #131c25;
 	--lightColor: #41454a;
@@ -8,13 +13,17 @@ html {
 	--lightFlashColor: #ffcc55;
 	--ideColor: #282a36;
 	--debugColor: #FF0054;
+	
+	/* - sizes */
 	--panelIndent: 2px;
 	--margin: 6px;
 	--minW  : 160px;
 	--titleW: 2.5em;
-
 	--d3  : 3px;
 	--d3h : 1px;
+
+	/* - timers */
+	--popupTime: .5s;
 
 	color: var(--lighterColor);
 	font-family: Open Sans, Lato, sans-serif;
@@ -38,8 +47,10 @@ input {
 }
 img { width: 100%; }
 
-.rel { position: relative; }
 
+/*==============================================*/
+/*                Flex Container                */
+/*==============================================*/
 .flexIn, .flex { display: flex; }
 .flexIn.down { flex-direction: column; }
 .flexIn.right { flex-direction: row; }
@@ -48,6 +59,9 @@ img { width: 100%; }
 	transition: flex .5s;
 }
 
+/*==============================================*/
+/*                 Unit changes                 */
+/*==============================================*/
 .margin-0  { margin: 0 !important; }
 .margin-05 { margin: calc(var(--margin) / 2) !important; }
 .margin-1  { margin: var(--margin) !important; }
@@ -92,11 +106,41 @@ img { width: 100%; }
 .opac-2 { opacity: .5; }
 .opac-3 { opacity: 1; }
 
+.rel { position: relative; }
 .invisible { display: none !important; }
 .block { display: block !important; }
 .pointer { cursor: pointer; }
 .big { font-weight: 700; }
+.auto-scroll { overflow: auto; }
 
+
+/*==============================================*/
+/*               Pre-defined style              */
+/*==============================================*/
+.flash {
+	background: var(--flashColor) !important;
+	font-weight: 700;
+	color: var(--blackColor);
+	border: none;
+	cursor: pointer;
+}
+.flash:hover { background: var(--lightFlashColor) !important; }
+
+.d3 {
+	display: inline-block;
+	border-top: solid var(--d3) #0002;
+	border-right: solid var(--d3) #0005;
+	clip-path: polygon(var(--d3) 0, 100% 0, 100% calc(100% - var(--d3)), calc(100% - var(--d3)) 100%, 0 100%, 0 var(--d3));
+}
+.d3:hover {
+	border-top-width: var(--d3h);
+	border-right-width: var(--d3h);
+	clip-path: polygon(var(--d3h) 0, 100% 0, 100% calc(100% - var(--d3h)), calc(100% - var(--d3h)) 100%, 0 100%, 0 var(--d3h));
+	margin-left: calc(var(--d3) - var(--d3h));
+	margin-bottom: calc(var(--d3) - var(--d3h));
+}
+
+/* Container{ Title, Panel } system */
 .cont {
 	display: flex;
 	overflow: hidden !important;
@@ -138,49 +182,9 @@ img { width: 100%; }
 	margin-right: var(--margin);
 }
 
-.log {
-	margin: var(--margin);
-	padding: var(--margin);
-	background: var(--darkColor);
-	word-wrap: break-word;
-	color: white;
-	transition: margin .6s;
-	overflow: auto;
-}
-.log.wrapped {
-	margin-right: 100%;
-	overflow: hidden;
-}
-.log b {
-	background: var(--lightColor);
-	padding: 2px;
-	border-radius: 5px;
-	border: solid 1px var(--lighterColor);
-}
-
-.flash {
-	background: var(--flashColor);
-	font-weight: 700;
-	color: var(--blackColor);
-	border: none;
-	cursor: pointer;
-}
-.flash:hover { background: var(--lightFlashColor) !important; }
-
-.d3 {
-	display: inline-block;
-	border-top: solid var(--d3) #0002;
-	border-right: solid var(--d3) #0005;
-	clip-path: polygon(var(--d3) 0, 100% 0, 100% calc(100% - var(--d3)), calc(100% - var(--d3)) 100%, 0 100%, 0 var(--d3));
-}
-.d3:hover {
-	border-top-width: var(--d3h);
-	border-right-width: var(--d3h);
-	clip-path: polygon(var(--d3h) 0, 100% 0, 100% calc(100% - var(--d3h)), calc(100% - var(--d3h)) 100%, 0 100%, 0 var(--d3h));
-	margin-left: calc(var(--d3) - var(--d3h));
-	margin-bottom: calc(var(--d3) - var(--d3h));
-}
-
+/*==============================================*/
+/*                Popups system                 */
+/*==============================================*/
 .popup-container {
 	position: absolute;
 	display: flex;
@@ -190,7 +194,7 @@ img { width: 100%; }
 	right: 0;
 	left: 0;
 	height: 100%;
-	transition: margin 1s, opacity 1s, height 1s;
+	transition: margin var(--popupTime), opacity var(--popupTime), height var(--popupTime);
 	z-index: 10;
 }
 .popup-container.wrapped {
@@ -208,6 +212,10 @@ img { width: 100%; }
 }
 .popup > div { padding: 2em; }
 
+/*==============================================*/
+/*            More specifics changes            */
+/*==============================================*/
+/* select input */
 .select {
 	display: inline-block;
 	position: absolute;
@@ -240,6 +248,35 @@ img { width: 100%; }
 	pointer-events: none;
 }
 
+/* logs system */
+.log {
+	margin: var(--margin);
+	padding: var(--margin);
+	background: var(--darkColor);
+	word-wrap: break-word;
+	transition: margin .6s;
+	overflow: auto;
+	color: white;
+}
+.log.wrapped {
+	margin-right: 100%;
+	overflow: hidden;
+}
+.log b {
+	background: var(--lightColor);
+	padding: 2px;
+	border-radius: 5px;
+	border: solid 1px var(--lighterColor);
+}
+.log .line > div:nth-child(2) { white-space: pre-line; }
+.log .line.in-flash > div:nth-child(2) { color: white; }
+.log .line:nth-child(odd) { margin-bottom: 0; }
+.log .line:nth-child(even) { margin-top: 0; }
+.log .line:last-child { margin-bottom: var(--margin); }
+.fight.log .line { color: var(--lighterColor); }
+.fight.log pre { margin: 0; }
+
+/* waiting animation */
 .loading {
 	height: 1em;
 	text-align: center;

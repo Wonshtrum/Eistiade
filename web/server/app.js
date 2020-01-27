@@ -63,10 +63,9 @@ const callCore = () => request.post('http://localhost:'+config.linkPort+'/event'
 app.post('/result', function(req, res) {
 	res.send();
 	let id = req.body.id;
-	console.log('COMMING', req);
+	console.log('RESPONSE FOR', req.body.id);
 	req = listenDb.queue[id];
 	if (!req) return;
-	console.log(req.stmt);
 	db.query(req.stmt, function(err, data) {
 		if (data.length == 1) {
 			data = data[0];
@@ -76,7 +75,6 @@ app.post('/result', function(req, res) {
 				data.field2 = JSON.parse(data.field2);
 			}
 			data.args = req.args;
-			console.log(data);
 			req.callback(data);
 		} else {
 			console.log(err, data);
@@ -90,7 +88,6 @@ const listenDb = function(inStmt, cmd, args, callback, outStmt) {
 	db.query(inStmt);
 	let id = ++listenDb.id;
 	outStmt = outStmt || 'SELECT * FROM Results WHERE id = '+(id);
-	console.log("---", id);
 	listenDb.queue[id] = {id:id, stmt:outStmt, cmd:cmd, args:args, callback:callback, timeout:0};
 	callCore();
 }

@@ -1,3 +1,6 @@
+/*==============================================*/
+/*            Getting HTML elements             */
+/*==============================================*/
 const editor = ace.edit('editor');
 const langSel = document.getElementById('langSel');
 const nameIn = document.getElementById('nameIn');
@@ -17,6 +20,9 @@ const fighter2 = document.getElementById('fighter2');
 const popupContainer = document.getElementById('popup-container')
 const login = document.getElementById('login');
 
+/*==============================================*/
+/*              Set up ace editor               */
+/*==============================================*/
 editor.setTheme('ace/theme/dracula');
 langSel.onchange = e => {
 	let lang = langSel.selectedOptions[0].getAttribute('lang');
@@ -27,6 +33,9 @@ langSel.onchange = e => {
 }
 langSel.onchange();
 
+/*==============================================*/
+/*          Attach JS to HTML elements          */
+/*==============================================*/
 const minimize = node => {
 	node.querySelectorAll('.min').forEach(div => {
 		let title = div.querySelector('.title');
@@ -36,6 +45,12 @@ const minimize = node => {
 }
 minimize(document);
 
+const maskingPopup = node => node.querySelectorAll('.popup').forEach(e => e.onclick = event => event.stopPropagation());
+maskingPopup(popupContainer);
+
+/*==============================================*/
+/*           Attach JS to HTML buttons          */
+/*==============================================*/
 test.onclick = e => {
 	let code = editor.getValue();
 	let lang = langSel.selectedOptions[0].getAttribute('name');
@@ -49,7 +64,7 @@ test.onclick = e => {
 		method: 'post',
 		success: e => log(e, bar)
 	});
-}
+};
 submit.onclick = e => {
 	let name = nameIn.value;
 	let data = { args: [1, name] };
@@ -61,11 +76,11 @@ submit.onclick = e => {
 		method: 'post',
 		success: e => log(e, bar)
 	});
-}
+};
 fight.onclick = e => {
 	loadPopup('#fightPopup');
 	showPopup();
-}
+};
 goFight.onclick = e => {
 	hidePopup();
 	let ai1 = fighter1.value;
@@ -79,13 +94,22 @@ goFight.onclick = e => {
 		method: 'post',
 		success: e => log(e, bar)
 	});
-}
-
+};
 clear.onclick = e => {
 	e.stopPropagation();
 	logs.innerHTML = '';
 };
+play.onclick = e => {
+	if (logs.play) return;
+	let lineId = logs.lineId+1;
+	if (lineId === logs.data.history.length) lineId = 0;
+	logs.play = true;
+	logs.flash(lineId);
+};
 
+/*==============================================*/
+/*             HTML creation tools              */
+/*==============================================*/
 const createText = text => document.createTextNode(text);
 const createNode = (type, elements, options) => {
 	elements = elements || [];
@@ -101,27 +125,36 @@ const createNode = (type, elements, options) => {
 		}
 	}
 	return node;
-}
+};
 
+/*==============================================*/
+/*                 Log container                */
+/*==============================================*/
+/* Attributes */
 logs.logId = 0;
 logs.fightId = 'log-';
 logs.lineId = -1;
 logs.play = true;
 logs.wait = 500;
-logs.next = 0;
+logs.next;
+logs.autoScroll = false;
+logs.autoScrollCD;
 
-logs.scroll = (node) => {
+/* Methods */
+logs.scroll = node => {
 	node = node || logs.lastChild;
 	logs.scrollTop = node.offsetTop - logs.offsetTop;
-}
+};
 logs.unFlash = () => {
 	let line = logs.querySelector('#'+logs.fightId+logs.lineId);
 	if (line) {
 		line.classList.remove('in-flash');
+		line.classList.add('flex-t');
 		line.querySelector('.title').classList.remove('flash');
 	}
-}
-logs.flash = (id, fightId) => {
+};
+logs.flash = (id, fightId, scroll) => {
+	scroll = scroll || (scroll === undefined);
 	clearTimeout(logs.next);
 	logs.unFlash();
 	if (fightId) logs.fightId = fightId;
@@ -132,9 +165,10 @@ logs.flash = (id, fightId) => {
 		logs.game.play(id);
 		let line = logs.querySelector('#'+logs.fightId+id);
 		if (line) {
-			logs.scroll(line);
 			line.classList.add('in-flash');
+			line.classList.remove('flex-t');
 			line.querySelector('.title').classList.add('flash');
+			if (scroll) logs.scroll(line);
 		}
 		for (let [i, step] of Object.entries(steps.children)) {
 			if (i == id) step.classList.add('out-lightFlash');
@@ -143,28 +177,38 @@ logs.flash = (id, fightId) => {
 		if (id < logs.data.history.length-1 && logs.play) logs.next = setTimeout(e => logs.flash(id+1), logs.wait);
 		else logs.play = false;
 	}
-}
-play.onclick = e => {
-	if (logs.play) return;
-	let lineId = logs.lineId+1;
-	if (lineId === logs.data.history.length) lineId = 0;
-	logs.play = true;
-	logs.flash(lineId);
-}
-logs.setFight = id => {
+};
+logs.setFight = (id, play) => {
 	clearTimeout(logs.next);
-	logs.play = true;
+	logs.play = play || (play === undefined);
 	logs.data = logs.querySelector('#'+id).data;
 	logs.game = game(logs.data.field2);
 	steps.innerHTML = '';
 	steps.append(...Array.from({length: logs.data.history.length}, (_, i) => {
 		let node = createNode('div', [], {class: 'out-dark padding-1'})
-		node.onclick = e => logs.flash(i);
+		node.onclick = e => {
+			clearTimeout(logs.autoScrollCD);
+			logs.autoScrollCD = setTimeout(() => logs.autoScroll = false, 1000);
+			logs.autoScroll = true;
+			logs.flash(i);
+		};
 		return node;
 	}));
-	logs.flash(0, id);
-}
+	if (logs.play) logs.flash(0, id);
+};
+logs.onscroll = e => {
+	if (logs.play || logs.autoScroll) return;
+	let nodes = Object.values(logs.querySelectorAll('.line')).filter(e => e.offsetTop-logs.offsetTop-logs.scrollTop>0 && e.offsetTop-logs.offsetTop-logs.scrollTop-logs.offsetHeight<0);
+	if (nodes.length > 0) {
+		let node = nodes[0];
+		if (node.fightId != logs.fightId) logs.setFight(node.fightId, false);
+		logs.flash(node.lineId, node.fightId, false);
+	}
+};
 
+/*==============================================*/
+/*                Logging system                */
+/*==============================================*/
 const addLog = (msg, options) => {
 	logs.logId++;
 	options = options || {class: ''};
@@ -175,7 +219,7 @@ const addLog = (msg, options) => {
 	node.classList.remove('wrapped');
 	minimize(node);
 	return node;
-}
+};
 const loading = () => {
 	let bar = createNode('div', [ createNode('div', [], {class: 'bar'}), createNode('div', [], {class: 'bar'}), createNode('div', [], {class: 'bar'}) ], {class: 'loading'});
 	logs.appendChild(bar);
@@ -194,7 +238,7 @@ const loading = () => {
 	}
 	bar.update();
 	return bar;
-}
+};
 const log = (msg, bar) => {
 	if (bar) bar.stop();
 	if (msg.exitCode === 2) {
@@ -227,36 +271,42 @@ const log = (msg, bar) => {
 				let content = [ createNode('div', [ e.substring(0, endLine) ], {class: 'title'}) ];
 				let min = '';
 				if (e.length-endLine-1 > 0) {
-					content.push(createNode('div', [ e.substring(endLine+1) ], {class: 'padding-1 in-darken'}));
+					content.push(createNode('div', [ e.substring(endLine+1) ], {class: 'padding-1 in-darken auto-scroll'}));
 					min = ' min';
 				}
-				return createNode('div', content, {class: 'cont flex-a line'+min, id: fightId+i});
+				let line = createNode('div', content, {class: 'cont flex-a line flex-t'+min, id: fightId+i});
+				line.fightId = fightId;
+				line.lineId = i;
+				return line;
 			}), {class: 'flexIn down history', id:fightId});
 			msg.history = history;
 			fightLog.data = msg;
 
 			let button = createNode('button', [ 'Combat' ], {class: 'flash flex-a margin-1 padding-1'});
 			button.onclick = e => logs.setFight(fightId);
-			addLog([button, 'entre ', createNode('b', [ msg.args[0] ]), ' et ', createNode('b', [ msg.args[1] ]), ', resultat :\n', fightLog ]);
+			addLog([button, 'entre ', createNode('b', [ msg.args[0] ]), ' et ', createNode('b', [ msg.args[1] ]), ', resultat :\n', fightLog ], {class: 'fight'});
 			button.onclick();
 		} else {
 			addLog([ 'Le combat entre ', createNode('b', [ msg.args[0] ]), ' et ', createNode('b', [ msg.args[1] ]), ' ne s\'est pas déroulé correctement. Le serveur indique :\n', msg.field0]);
 		}
 	}
-}
+};
 
-const maskingPopup = node => node.querySelectorAll('.popup').forEach(e => e.onclick = event => event.stopPropagation());
-maskingPopup(popupContainer);
-
+/*==============================================*/
+/*                 Popup system                 */
+/*==============================================*/
 const loadPopup = popup => {
 	popupContainer.querySelectorAll('.popup').forEach(e => e.classList.add('invisible'));
 	popupContainer.querySelector(popup).classList.remove('invisible');
-}
+};
 const showPopup = () => {
 	popupContainer.classList.remove('wrapped');
-}
+};
 const hidePopup = () => {
 	popupContainer.classList.add('wrapped');
-}
+};
 popupContainer.onclick = hidePopup;
-login.onclick = () => loadPopup('#login');
+login.onclick = () => {
+	loadPopup('#loginPopup');
+	showPopup();
+};

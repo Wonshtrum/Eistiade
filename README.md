@@ -8,7 +8,6 @@ Clone repository, create the Database in your MySQL server by sourcing the file 
     "user":"YOUR_USER",
     "password":"YOUR_PASSWORD",
     "database":"Eistiade",
-    "interval":2000,
     "nbWorkers":8,
     "timeout":10,
     "linkPort":65000

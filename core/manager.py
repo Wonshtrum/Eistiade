@@ -4,6 +4,7 @@ import pymysql as sql
 from json import load as fromJson
 from time import sleep, time
 from threading import Thread, RLock
+from multiprocessing import Queue
 from works import *
 from hook import *
 from requests import post as callApp
@@ -21,13 +22,12 @@ class Worker(Thread):
         start = time()
         exitCode, field0, field1, field2 = self.work.process()
         with lock:
-            print('FINISH', self.id, time()-start)
+            print('FINISH', self.requestId, time()-start)
             with self.db.cursor() as cursor:
                 cursor.execute('INSERT INTO Results VALUES(%s, %s, %s, %s, %s, %s)', (self.requestId, self.work.id, exitCode, field0, field1, field2))
                 if self.work.sql and exitCode == 0:
                     cursor.execute(self.work.sql, self.work.inserts)
-        self.working = False
-        self.callback(self.requestId)
+        self.callback(self.id)
     def give(self, requestId, work):
         if self.working:
             raise Exception
@@ -50,19 +50,24 @@ class WorkerManager:
 
 class Poller:
     def __init__(self, config):
+        #DB
         self.db = sql.connect(host=config['host'],
                 user=config['user'],
                 passwd=config['password'],
                 db=config['database'],
                 autocommit=True)
         self.cursor = self.db.cursor()
+        #Factory
         self.cursor.execute('SELECT MAX(id) AS id FROM Results')
-        self.factory = WorkerManager(config['nbWorkers'], self.db, self.endWork)
+        self.factory = WorkerManager(config['nbWorkers'], self.db, self.signalPoll)
         self.lastIndex = self.cursor.fetchone()[0] or 0
         print('LastRequest:', self.lastIndex)
+        #Reload state
         self.reload()
+        #Link with app
+        self.resQueue = Queue()
         self.listener = Listener(port=config['linkPort'])
-        self.listener.bind('/event', self.poll)
+        self.listener.bind('/event', self.signalPoll)
         self.listener.start()
 
     def reload(self):
@@ -73,25 +78,32 @@ class Poller:
             ai = AI(author, name, lang)
             ai.register(False)
 
-    def endWork(self,requestId):
-        callApp(url='http://localhost:8080/result', data={'id':requestId})
-        self.poll()
+    def signalPoll(self, workerId = None):
+        self.resQueue.put(workerId)
 
     def poll(self):
-        with lock:
-            self.cursor.execute('SELECT * FROM Requests WHERE id > %s', (self.lastIndex,))
-            lines = self.cursor.fetchall()
+        while True:
+            with lock:
+                self.cursor.execute('SELECT * FROM Requests WHERE id > %s', (self.lastIndex,))
+                lines = self.cursor.fetchall()
             print("Polling[{}]".format(len(lines)))
             for line in lines:
                 if self.factory.newWork(line[0], work(line)):
                     self.lastIndex = line[0]
-                    print(line[0])
                 else:
                     break
+            print('\nWAITING')
+            workerId = self.resQueue.get()
+            print('GOT', workerId, 'IN QUEUE')
+            if workerId is not None:
+                worker = self.factory.workers[workerId]
+                callApp(url='http://localhost:8080/result', data={'id':worker.requestId})
+                worker.working = False
 
 if __name__ == '__main__':
     dbDir = '../db'
     dbConfigFile = '{}/secret.json'.format(dbDir)
     with open(dbConfigFile) as f:
         config = fromJson(f)
-    Poller(config)
+    poller = Poller(config)
+    poller.poll()

@@ -20,7 +20,7 @@ class Listener(Thread):
     def __init__(self, addr='localhost', port=8000):
         self.addr = addr
         self.port = port
-        Thread.__init__(self)
+        Thread.__init__(self, daemon=True)
 
     def bind(self, *args, **kwargs):
         Handler.bind(*args, **kwargs)

@@ -34,7 +34,6 @@ class Send(Work):
 
         exitCode, logs = ai.update(self.code)
         ai.compiled = (exitCode == 0)
-        print('Compile', self.name, self.lang)
         return [exitCode, logs]
 
 class Set(Work):
@@ -42,7 +41,6 @@ class Set(Work):
     def __init__(self, arg0, arg1, arg2, author):
         self.name = arg0
     def routine(self):
-        print(AI.collection)
         if not AI.exist(self.name, False):
             return [1, 'AI, {}, doesn\'t exist.\nPlease test your code before submitting it.'.format(self.name)]
         ai = AI.get(self.name)
@@ -52,8 +50,6 @@ class Set(Work):
             return [1, 'AI, {}, has not compiled properly.\nPlease check your code before submitting it.'.format(ai.name)]
         self.inserts = (ai.author, ai.name, ai.lang, 1)
         ai.ready = True
-
-        print('Set', self.name)
         return [0]
 
 class Fight(Work):
@@ -72,8 +68,6 @@ class Fight(Work):
         log1 = toJson(ai1.logHistory)
         log2 = toJson(ai2.logHistory)
         gameLog = toJson(game.log)
-        print("=======",game.log)
-        print('Fight', self.name1, self.name2)
         return [0, log1, log2, gameLog]
 
 workList = [Send, Set, Fight]

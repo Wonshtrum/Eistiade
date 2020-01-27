@@ -5,7 +5,7 @@ const leftIcon = document.getElementById('leftIcon');
 
 canvas.width = 1000;
 canvas.height = 500;
-const colors = ['#000', '#f00', '#00f'];
+const colors = ['#000', '#f07', '#70f', '#fffc'];
 const game = function(data) {
 	/*iconLeft.innerHTML = data.ai1;
 	iconRight.innerHTML = data.ai2;*/
@@ -31,8 +31,6 @@ const game = function(data) {
 		for (let i=0 ; i<turn+1 ; i++) {
 			self.move(self.moves[i], 1+i%2);
 		}
-		console.log(self.matrix.map(line => line.map(e => '.XO'[e]).join(' ')).join('\n'))
-		console.log('--------------')
 		self.draw(turn == self.end);
 	}
 	self.draw = win => {
@@ -49,7 +47,7 @@ const game = function(data) {
 		}
 		if (win && self.win.state) {
 			let [ay, ax, by, bx] = self.win.state.map(e => Math.floor(c*(e+.5)-d));
-			ctx.strokeStyle = '#fffc';
+			ctx.strokeStyle = colors[3];
 			ctx.lineWidth = d*2;
 			ctx.beginPath();
 			ctx.moveTo(dx+ax, dy+ay)

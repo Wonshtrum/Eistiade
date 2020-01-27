@@ -58,7 +58,6 @@ def fight(ai1, ai2):
         for player in (player1, player2):
             start = time()
             try:
-                print(game.showBoard())
                 player.newLogEntry('[Turn {}]: '.format(turn))
                 player.send(game.showBoard())
                 try:
@@ -71,7 +70,6 @@ def fight(ai1, ai2):
                 finally:
                     player.logEntry(' after {:.5f}s.\n'.format(time()-start))
                     player.collectLogs()
-                print('{}: {} ({})'.format(player.name, data, time()-start))
                 try:
                     game.play(player.id, data)
                 except Exception as E:
@@ -96,14 +94,8 @@ def fight(ai1, ai2):
                     print("//////////////////////////////////////////")
                 break
 
-    for player in (player1, player2):
-        player.kill()
-        print('\n\n{} =============================================='.format(player.name))
-        player.printLogs()
-
-    print('\n\n[FINAL STATE] ==============================================')
-    print(game.showBoard())
-    print('\nWinner: {}'.format(game.winner))
+    player1.kill()
+    player2.kill()
     return (game, player1, player2)
 
 if __name__ == '__main__':
