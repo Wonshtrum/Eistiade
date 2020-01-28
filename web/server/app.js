@@ -3,6 +3,7 @@
 //                 INIT                    //
 /////////////////////////////////////////////
 const express    = require("express");
+const session    = require("express-session");
 const bodyParser = require("body-parser");
 const sql        = require('mysql');
 const fs         = require('fs');
@@ -18,17 +19,65 @@ console.log('Root directory:', __root);
 /////////////////////////////////////////////
 //                   APP                   //
 /////////////////////////////////////////////
+app.use(session({
+	secret: 'secret',
+	resave: true,
+	saveUninitialized: true
+}))
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use('/', express.static(__client));
+
+
+const notLogged = (req, res) => {
+	if (req.session.loggedIn) {
+		return false;
+	} else {
+		res.send({exitCode: 2, field0: 'You must be logged in to do this!'});
+		return true;
+	}
+}
 
 app.get('/', function(req, res) {
 	res.sendFile(__client + '/index.html');
 });
 app.post('/submit', function(req, res) {
 	let [cmd, arg0, arg1, arg2] = req.body['args[]'];
-	let args = [arg0, arg1, arg2];
-	let stmt = sql.format('INSERT INTO Requests(cmd, arg0, arg1, arg2, author) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, 'Default']);
+	if (cmd == 3) {
+		let stmt = sql.format('SELECT * FROM Users WHERE name = ?', [ arg0 ]);
+		db.query(stmt, function(err, data) {
+			if (!err && data && data.length === 0) {
+				stmt = sql.format('INSERT INTO Users(name, password) VALUES(?, ?)', [ arg0, arg1 ]);
+				db.query(stmt);
+				req.session.loggedIn = true;
+				req.session.username = arg0;
+				res.send(true);
+			} else {
+				res.send(false);
+			}
+		});
+		return;
+	} else if (cmd == 4) {
+		let stmt = sql.format('SELECT * FROM Users WHERE name = ? AND password = ?', [ arg0, arg1 ]);
+		db.query(stmt, function(err, data) {
+			if (!err && data && data.length > 0) {
+				req.session.loggedIn = true;
+				req.session.username = arg0;
+				res.send(true);
+			} else {
+				res.send(false);
+			}
+		});
+		return;
+	} else if (cmd == 5) {
+		req.session.loggedIn = false;
+		res.send(true);
+		return;
+	}
+	console.log(req.session);
+	if ((cmd == 0 || cmd == 1) && notLogged(req, res)) return;
+	let args = [ arg0, arg1, arg2 ];
+	let stmt = sql.format('INSERT INTO Requests(cmd, arg0, arg1, arg2, author) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, req.session.username]);
 	listenDb(stmt, cmd, args, line => {res.send(line)});
 })
 app.get('/dbCore', function(req, res) {
@@ -43,6 +92,11 @@ app.get('/dbWeb', function(req, res) {
 });
 app.get('/dbAgent', function(req, res) {
 	db.query('SELECT * FROM Agents', function(err, data) {
+		res.send(data);
+	});
+});
+app.get('/dbUser', function(req, res) {
+	db.query('SELECT * FROM Users', function(err, data) {
 		res.send(data);
 	});
 });

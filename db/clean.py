@@ -3,8 +3,11 @@
 import pymysql as sql
 from json import load as json
 from os import system
+from sys import argv
 
-system('sudo rm -rf ../players/*')
+force = len(argv)>1 and argv[1] == '-f'
+
+if force: system('sudo rm -rf ../players/*')
 
 with open('secret.json') as f:
     config = json(f)
@@ -17,6 +20,7 @@ db = sql.connect(host=config['host'],
 with db.cursor() as cursor:
     cursor.execute('DELETE FROM Requests')
     cursor.execute('DELETE FROM Results')
-    cursor.execute('DELETE FROM Agents')
+    if force: cursor.execute('DELETE FROM Agents')
+    if force: cursor.execute('DELETE FROM Users')
     cursor.execute('ALTER TABLE Requests AUTO_INCREMENT = 0')
 db.close()

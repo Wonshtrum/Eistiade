@@ -25,5 +25,6 @@ CREATE TABLE Agents (
 	status INTEGER);
 
 CREATE TABLE Users (
+	id INTEGER PRIMARY KEY AUTO_INCREMENT,
 	name TEXT,
 	password TEXT);
