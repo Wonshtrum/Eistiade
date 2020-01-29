@@ -65,3 +65,16 @@ canvas {
 	background: white;
 	opacity: 50%;
 }
+
+#fightPopup .select {
+	min-width: 10em;
+}
+
+#play { margin: 0 1em; }
+.arrow.pause {
+	height: 2em;
+	width: 0.75em;
+	border-width: 0 0.625em !important;
+	border-style: solid !important;
+	border-color: transparent var(--whiteColor) !important;
+}

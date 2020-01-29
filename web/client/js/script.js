@@ -15,6 +15,8 @@ const logs = document.getElementById('logs');
 const progress = document.getElementById('progress');
 const steps = document.getElementById('steps');
 const play = document.getElementById('play');
+const next = document.getElementById('next');
+const previous = document.getElementById('previous');
 const fighter1 = document.getElementById('fighter1');
 const fighter2 = document.getElementById('fighter2');
 const popupContainer = document.getElementById('popup-container')
@@ -22,9 +24,11 @@ const login = document.getElementById('login');
 const signIn = document.getElementById('signIn');
 const signInName = document.getElementById('signInName');
 const signInPass = document.getElementById('signInPass');
+const signInError = document.getElementById('signInError');
 const signUp = document.getElementById('signUp');
 const signUpName = document.getElementById('signUpName');
 const signUpPass = document.getElementById('signUpPass');
+const signUpError = document.getElementById('signUpError');
 
 /*==============================================*/
 /*              Set up ace editor               */
@@ -100,12 +104,33 @@ submit.onclick = e => {
 	ajax(data, e => log(e, bar));
 };
 fight.onclick = e => {
+	ajax([6], e => {
+		if (e.exitCode === 0) {
+			let ai1 = '';
+			let ai2 = '';
+			let i1 = -1;
+			let i2 = -1;
+			if (fighter1.selectedIndex >= 0) ai1 = fighter1.selectedOptions[0].value;
+			if (fighter2.selectedIndex >= 0) ai2 = fighter2.selectedOptions[0].value;
+			fighter1.innerHTML = '';
+			fighter2.innerHTML = '';
+			e.data.forEach((opt, i) => {
+				let ai = `${opt.name} (${opt.author}, ${opt.lang})`;
+				if (ai == ai1) i1 = i;
+				if (ai == ai2) i2 = i;
+				fighter1.options.add(createNode('option', [ ai ]));
+				fighter2.options.add(createNode('option', [ ai ]));
+			});
+			fighter1.selectedIndex = i1;
+			fighter2.selectedIndex = i2;
+		}
+	});
 	loadPopup('#fightPopup');
 };
 goFight.onclick = e => {
 	hidePopup();
-	let ai1 = fighter1.value;
-	let ai2 = fighter2.value;
+	let ai1 = fighter1.value.split(' ')[0];
+	let ai2 = fighter2.value.split(' ')[0];
 	let data = [2, ai1, ai2];
 	let bar = loading();
 	ajax(data, e => log(e, bar));
@@ -115,10 +140,25 @@ clear.onclick = e => {
 	logs.innerHTML = '';
 };
 play.onclick = e => {
-	if (logs.play) return;
+	if (!logs.data || logs.stop()) return;
 	let lineId = logs.lineId+1;
 	if (lineId === logs.data.history.length) lineId = 0;
 	logs.play = true;
+	play.update();
+	logs.flash(lineId);
+};
+next.onclick = e => {
+	if (!logs.data) return;
+	logs.stop();
+	let lineId = logs.lineId+1;
+	if (lineId === logs.data.history.length) lineId = 0;
+	logs.flash(lineId);
+};
+previous.onclick = e => {
+	if (!logs.data) return;
+	logs.stop();
+	let lineId = logs.lineId-1;
+	if (lineId === -1) lineId = logs.data.history.length-1;
 	logs.flash(lineId);
 };
 login.onclick = e => {
@@ -139,10 +179,11 @@ signUp.onclick = e => {
 	let name = signUpName.value;
 	let pass = signUpPass.value;
 	ajax([3, name, pass], e => {
-		if (e) {
+		if (e.exitCode === 0) {
 			hidePopup();
 			login.deco(signUpName.value);
 		} else {
+			signUpError.innerHTML = e.field0;
 			showPopup();
 		}
 		signUpPass.value = signInPass.value = '';
@@ -152,10 +193,11 @@ signIn.onclick = e => {
 	let name = signInName.value;
 	let pass = signInPass.value;
 	ajax([4, name, pass], e => {
-		if (e) {
+		if (e.exitCode === 0) {
 			hidePopup();
 			login.deco(signInName.value);
 		} else {
+			signInError.innerHTML = e.field0;
 			showPopup();
 		}
 		signUpPass.value = signInPass.value = '';
@@ -192,11 +234,23 @@ logs.lineId = -1;
 logs.play = true;
 logs.wait = 500;
 logs.next;
-
+play.update = () => {
+	if (logs.play) play.classList.add('pause')
+	else play.classList.remove('pause')
+};
 /* Methods */
 logs.scroll = node => {
 	node = node || logs.lastChild;
 	logs.scrollTop = node.offsetTop - logs.offsetTop;
+};
+logs.stop = () => {
+	if (logs.play) {
+		clearTimeout(logs.next);
+		logs.play = false;
+		play.update();
+		return true;
+	}
+	return false;
 };
 logs.unFlash = () => {
 	let line = logs.querySelector('#'+logs.fightId+logs.lineId);
@@ -228,12 +282,13 @@ logs.flash = (id, fightId, scroll) => {
 			else step.classList.remove('out-lightFlash');
 		}
 		if (id < logs.data.history.length-1 && logs.play) logs.next = setTimeout(e => logs.flash(id+1), logs.wait);
-		else logs.play = false;
+		else logs.stop();
 	}
 };
-logs.setFight = (id, play) => {
+logs.setFight = (id, p) => {
 	clearTimeout(logs.next);
-	logs.play = play || (play === undefined);
+	logs.play = p || (p === undefined);
+	play.update();
 	logs.data = logs.querySelector('#'+id).data;
 	logs.game = game(logs.data.field2);
 	steps.innerHTML = '';
@@ -244,15 +299,6 @@ logs.setFight = (id, play) => {
 	}));
 	if (logs.play) logs.flash(0, id);
 };
-/*logs.onscroll = e => {
-	if (logs.play || logs.autoScroll) return;
-	let nodes = Object.values(logs.querySelectorAll('.line')).filter(e => e.offsetTop-logs.offsetTop-logs.scrollTop>0 && e.offsetTop-logs.offsetTop-logs.scrollTop-logs.offsetHeight<0);
-	if (nodes.length > 0) {
-		let node = nodes[0];
-		if (node.fightId != logs.fightId) logs.setFight(node.fightId, false);
-		logs.flash(node.lineId, node.fightId, false);
-	}
-};*/
 
 /*==============================================*/
 /*                Logging system                */

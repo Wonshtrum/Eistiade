@@ -41,7 +41,11 @@
 							<div id='progress' class='in-flash'></div>
 							<div id='steps' class='flexIn'></div>
 						</div>
-						<button id='play' class='flash padding-1'>play</button>
+						<div id='toolBar' class='text-center margin-1'>
+							<span id='previous' class='arrow left hollow out-white out-w2 hov-opac-2'></span>
+							<span id='play' class='arrow right out-white out-w4 out-h2 hov-opac-2'></span>
+							<span id='next' class='arrow right hollow out-white out-w2 hov-opac-2'></span>
+						</div>
 					</div>
 				</div>
 				<div class='cont flex-2 min'>
@@ -54,7 +58,7 @@
 			<div class='flexIn down'>
 				<div class='cont min'>
 					<div class='title big'>Editeur
-					<input id='nameIn' type='text'/>
+					<input id='nameIn' type='text' placeholder='Nom de votre IA'/>
 					<div id='langCont' class='select right'>
 						<select id='langSel' class='flash'>
 							<option name='' lang=''>Text</option>
@@ -80,6 +84,7 @@
 		<div id='loginPopup' class='popup in-dark padding-1'>
 			<div class='panel'>
 				<div class='title big'>Connexion</div>
+				<div id='signInError' class='error margin-1'></div>
 				<div class='margin-1'>Pseudo</div>
 				<input id='signInName' class='margin-1'>
 				<div class='margin-1'>Mot de passe</div>
@@ -88,6 +93,7 @@
 			</div>
 			<div class='panel'>
 				<div class='title big'>Inscription</div>
+				<div id='signUpError' class='error margin-1'></div>
 				<div class='margin-1'>Pseudo</div>
 				<input id='signUpName' class='margin-1'>
 				<div class='margin-1'>Mot de passe</div>
@@ -102,11 +108,17 @@
 				<div class='flexIn'>
 					<div>
 						<div class='margin-1'>AI1</div>
-						<input id='fighter1' class='margin-1'/>
+						<div class='select margin-1 rel'>
+							<select id='fighter1' class='flash'>
+							</select>
+						</div>
 					</div>
 					<div>
 						<div class='margin-1'>AI2</div>
-						<input id='fighter2' class='margin-1'/>
+						<div class='select margin-1 rel'>
+							<select id='fighter2' class='flash'>
+							</select>
+						</div>
 					</div>
 				</div>
 				<button id='goFight' class='flash padding-1 margin-1'>OK</button>

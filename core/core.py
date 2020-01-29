@@ -62,7 +62,7 @@ def fight(ai1, ai2):
                 player.send(game.showBoard())
                 try:
                     data = thread(1, player.listen)()
-                    errorIf(player.poll() is not None)
+                    errorIf(player.poll() is not None, error=ErrorWithMessage('Program stopped...'))
                     player.logEntry('{} played: "{}",'.format(player.baseName, data))
                 except Exception as E:
                     player.logEntry('ended')

@@ -28,7 +28,25 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use('/', express.static(__client));
 
-
+const legalChar = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const illegalStr = (name, str, res, min, max) => {
+	min = min || 4;
+	max = max || 20;
+	let error = null;
+	if (!Object.values(str).reduce((x,y) => x && legalChar.includes(y), true)) {
+		error = 'contains illegal characters';
+	} else if (str.length < min) {
+		error =  'is too short';
+	} else if (str.length > max) {
+		error = 'is too long';
+	}
+	if (error === null) {
+		return false;
+	} else {
+		res.send({exitCode: 2, field0: name+' '+error});
+		return true;
+	}
+}
 const notLogged = (req, res) => {
 	if (req.session.loggedIn) {
 		return false;
@@ -44,6 +62,7 @@ app.get('/', function(req, res) {
 app.post('/submit', function(req, res) {
 	let [cmd, arg0, arg1, arg2] = req.body['args[]'];
 	if (cmd == 3) {
+		if (illegalStr('Name', arg0, res) || illegalStr('Password', arg1, res, 8, 20)) return;
 		let stmt = sql.format('SELECT * FROM Users WHERE name = ?', [ arg0 ]);
 		db.query(stmt, function(err, data) {
 			if (!err && data && data.length === 0) {
@@ -51,9 +70,9 @@ app.post('/submit', function(req, res) {
 				db.query(stmt);
 				req.session.loggedIn = true;
 				req.session.username = arg0;
-				res.send(true);
+				res.send({exitCode: 0});
 			} else {
-				res.send(false);
+				res.send({exitCode: 1, field0: 'Name is already taken'});
 			}
 		});
 		return;
@@ -63,22 +82,30 @@ app.post('/submit', function(req, res) {
 			if (!err && data && data.length > 0) {
 				req.session.loggedIn = true;
 				req.session.username = arg0;
-				res.send(true);
+				res.send({exitCode: 0});
 			} else {
-				res.send(false);
+				res.send({exitCode: 1, field0: 'Wrong name or password'});
 			}
 		});
 		return;
 	} else if (cmd == 5) {
 		req.session.loggedIn = false;
-		res.send(true);
+		res.send({exitCode: 0});
+		return;
+	} else if (cmd == 6) {
+		db.query('SELECT * FROM Agents', function(err, data) {
+			if (!err) {
+				res.send({exitCode: 0, data: data});
+			} else {
+				res.send({exitCode: 1});
+			}
+		});
 		return;
 	}
-	console.log(req.session);
-	if ((cmd == 0 || cmd == 1) && notLogged(req, res)) return;
+	if ((cmd < 2 && notLogged(req, res)) || illegalStr('Name', arg0, res)) return;
 	let args = [ arg0, arg1, arg2 ];
 	let stmt = sql.format('INSERT INTO Requests(cmd, arg0, arg1, arg2, author) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, req.session.username]);
-	listenDb(stmt, cmd, args, line => {res.send(line)});
+	listenDb(stmt, cmd, args, data => {res.send(data)});
 })
 app.get('/dbCore', function(req, res) {
 	db.query('SELECT * FROM Results', function(err, data) {
