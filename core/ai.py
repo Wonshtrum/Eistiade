@@ -10,6 +10,7 @@ def bash(cmd, block=True):
 
 class AI:
     rootDir = '../players'
+    boss = None
     collection = {}
     specs = {
         'python2' : ('{}.py2'  , ''                , 'python2 {}.py2'),
@@ -20,12 +21,15 @@ class AI:
         'scala'   : ('{}.scala', 'scalac {}'       , 'scala {}.class'),
         }
 
-    def __init__(self, author, name, lang):
+    def __init__(self, author, name, lang, status=1):
         self.author = author
         self.name = name
         self.lang = lang
         self.ready = False
         self.compiled = False
+        if status == 2:
+            AI.boss = self
+            return
 
         self.fileName = AI.specs[lang][0].format(name)
         self.tmpDir = '{}/{}/tmp'.format(AI.rootDir, author)

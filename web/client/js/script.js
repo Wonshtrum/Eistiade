@@ -83,6 +83,10 @@ const checkLogin = () => {
 	}
 	return false;
 };
+ajax([7], e => {
+	if (e.exitCode === 0) login.deco(e.field0);
+	else showPopup();
+});
 
 /*==============================================*/
 /*           Attach JS to HTML buttons          */
@@ -167,6 +171,7 @@ login.onclick = e => {
 login.deco = name => {
 	login.innerHTML = name;
 	logState.logged = true;
+	logState.login = name;
 	signUpName.value = signInName.value = '';
 	let action = login.onclick;
 	login.onclick = e => ajax([5], a => {
@@ -341,7 +346,8 @@ const log = (msg, bar) => {
 	}
 	if (msg.cmd === 0) {
 		if (msg.exitCode === 0) {
-			addLog([ createNode('b', [ msg.args[0] ]), ' a compilé sans erreurs !' ]);
+			msg.cmd = 2;
+			log(msg);
 		} else {
 			addLog([ createNode('b', [ msg.args[0] ]), ' n\'a pas pu être compilé. Le serveur indique :\n', msg.field0 ]);
 		}

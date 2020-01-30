@@ -20,7 +20,10 @@ db = sql.connect(host=config['host'],
 with db.cursor() as cursor:
     cursor.execute('DELETE FROM Requests')
     cursor.execute('DELETE FROM Results')
-    if force: cursor.execute('DELETE FROM Agents')
-    if force: cursor.execute('DELETE FROM Users')
+    if force:
+        cursor.execute('DELETE FROM Agents')
+        cursor.execute('INSERT INTO Agents VALUES(%s, %s, %s, %s)', ['$ROOT', 'Boss', 'unknown', 2])
+        cursor.execute('DELETE FROM Users')
+        cursor.execute('INSERT INTO Users(name) Values(%s)', ['$ROOT'])
     cursor.execute('ALTER TABLE Requests AUTO_INCREMENT = 0')
 db.close()

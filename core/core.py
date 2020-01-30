@@ -3,7 +3,7 @@
 from subprocess import Popen, PIPE
 from sys import argv
 from utils import *
-from game import Game
+from game.game import Game
 
 class Player:
     def __init__(self, ai, id):

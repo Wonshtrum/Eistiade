@@ -26,7 +26,8 @@ class Worker(Thread):
             with self.db.cursor() as cursor:
                 cursor.execute('INSERT INTO Results VALUES(%s, %s, %s, %s, %s, %s)', (self.requestId, self.work.id, exitCode, field0, field1, field2))
                 if self.work.sql and exitCode == 0:
-                    cursor.execute(self.work.sql, self.work.inserts)
+                    for stmt, inserts in zip(self.work.sql, self.work.inserts):
+                        cursor.execute(stmt, inserts)
         self.callback(self.id)
     def give(self, requestId, work):
         if self.working:
@@ -75,7 +76,9 @@ class Poller:
         for line in self.cursor.fetchall():
             print(line)
             author, name, lang, status = line
-            ai = AI(author, name, lang)
+            ai = AI(author, name, lang, status)
+            if status == 2:
+                ai.execute = lambda: 'python3 game/boss.py'
             ai.register(False)
 
     def signalPoll(self, workerId = None):

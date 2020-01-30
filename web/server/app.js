@@ -61,7 +61,14 @@ app.get('/', function(req, res) {
 });
 app.post('/submit', function(req, res) {
 	let [cmd, arg0, arg1, arg2] = req.body['args[]'];
-	if (cmd == 3) {
+	if (cmd == 7) {
+		if (req.session.loggedIn) {
+			res.send({exitCode: 0, field0: req.session.username});
+		} else {
+			res.send({exitCode: 1});
+		}
+		return;
+	} else if (cmd == 3) {
 		if (illegalStr('Name', arg0, res) || illegalStr('Password', arg1, res, 8, 20)) return;
 		let stmt = sql.format('SELECT * FROM Users WHERE name = ?', [ arg0 ]);
 		db.query(stmt, function(err, data) {
@@ -102,10 +109,10 @@ app.post('/submit', function(req, res) {
 		});
 		return;
 	}
-	if ((cmd < 2 && notLogged(req, res)) || illegalStr('Name', arg0, res)) return;
+	if (cmd < 2 && (notLogged(req, res) || illegalStr('Name', arg0, res))) return;
 	let args = [ arg0, arg1, arg2 ];
 	let stmt = sql.format('INSERT INTO Requests(cmd, arg0, arg1, arg2, author) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, req.session.username]);
-	listenDb(stmt, cmd, args, data => {res.send(data)});
+	listenDb(stmt, cmd, args, data => res.send(data));
 })
 app.get('/dbCore', function(req, res) {
 	db.query('SELECT * FROM Results', function(err, data) {
@@ -150,7 +157,7 @@ app.post('/result', function(req, res) {
 	db.query(req.stmt, function(err, data) {
 		if (data.length == 1) {
 			data = data[0];
-			if (req.cmd == 2 && data.exitCode == 0) {
+			if ((req.cmd == 0 || req.cmd == 2) && data.exitCode == 0) {
 				data.field0 = JSON.parse(data.field0);
 				data.field1 = JSON.parse(data.field1);
 				data.field2 = JSON.parse(data.field2);
