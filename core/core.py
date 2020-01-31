@@ -58,12 +58,12 @@ def fight(ai1, ai2):
         for player in (player1, player2):
             start = time()
             try:
-                player.newLogEntry('[Turn {}]: '.format(turn))
-                player.send(game.showBoard())
+                player.newLogEntry('[Turn {}]: {} '.format(turn, player.baseName))
                 try:
+                    player.send(game.showBoard())
                     data = thread(1, player.listen)()
                     errorIf(player.poll() is not None, error=ErrorWithMessage('Program stopped...'))
-                    player.logEntry('{} played: "{}",'.format(player.baseName, data))
+                    player.logEntry('played: "{}",'.format(data))
                 except Exception as E:
                     player.logEntry('ended')
                     raise E
@@ -92,6 +92,7 @@ def fight(ai1, ai2):
                     print(E)
                     print("//////////////////////////////////////////")
                     print("//////////////////////////////////////////")
+                    player.logEntry(str(E))
                 break
 
     player1.kill()

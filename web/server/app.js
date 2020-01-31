@@ -36,7 +36,7 @@ const illegalStr = (name, str, res, min, max) => {
 	if (!Object.values(str).reduce((x,y) => x && legalChar.includes(y), true)) {
 		error = 'contains illegal characters';
 	} else if (str.length < min) {
-		error =  'is too short';
+		error = 'is too short';
 	} else if (str.length > max) {
 		error = 'is too long';
 	}
@@ -149,35 +149,44 @@ const db = sql.createConnection(config)
 const callCore = () => request.post('http://localhost:'+config.linkPort+'/event');
 
 app.post('/result', function(req, res) {
+	endRequest(req.body.id);
 	res.send();
-	let id = req.body.id;
 	console.log('RESPONSE FOR', req.body.id);
-	req = listenDb.queue[id];
+});
+
+const endRequest = function(id) {
+	let req = listenDb.queue[id];
 	if (!req) return;
+	clearTimeout(req.timeout);
 	db.query(req.stmt, function(err, data) {
-		if (data.length == 1) {
+		if (!err && data.length == 1) {
 			data = data[0];
 			if ((req.cmd == 0 || req.cmd == 2) && data.exitCode == 0) {
 				data.field0 = JSON.parse(data.field0);
 				data.field1 = JSON.parse(data.field1);
 				data.field2 = JSON.parse(data.field2);
+				if (req.cmd == 0) req.args[1] = 'Boss';
 			}
 			data.args = req.args;
 			req.callback(data);
 		} else {
-			console.log(err, data);
 			req.callback({exitCode: 2, field0: 'Sorry something wen\'t wrong on the server side...'});
 		}
 		delete listenDb.queue[id];
 	});
-});
+}
 
 const listenDb = function(inStmt, cmd, args, callback, outStmt) {
-	db.query(inStmt);
-	let id = ++listenDb.id;
-	outStmt = outStmt || 'SELECT * FROM Results WHERE id = '+(id);
-	listenDb.queue[id] = {id:id, stmt:outStmt, cmd:cmd, args:args, callback:callback, timeout:0};
-	callCore();
+	db.query(inStmt, function(err) {
+		if (!err) {
+			let id = ++listenDb.id;
+			outStmt = outStmt || 'SELECT * FROM Results WHERE id = '+id;
+			let timeout = setTimeout(() => { console.log('TIMEOUT FOR '+id); endRequest(id); }, config.timeout);
+			listenDb.queue[id] = {id:id, stmt:outStmt, cmd:cmd, args:args, callback:callback, timeout:timeout};
+			callCore();
+			//try { callCore(); } catch { console.log('Connection impossible'); }
+		}
+	});
 }
 listenDb.queue = {};
 db.query('SELECT MAX(id) AS id FROM Requests', function(err, data) {

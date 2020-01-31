@@ -368,6 +368,7 @@ const log = (msg, bar) => {
 			let fightId = 'log-'+logs.logId+'-';
 			let fightLog = createNode('div', history.map((e, i) => {
 				let endLine = e.indexOf('\n');
+				if (endLine === -1) endLine = e.length;
 				let content = [ createNode('div', [ e.substring(0, endLine) ], {class: 'title'}) ];
 				let min = '';
 				if (e.length-endLine-1 > 0) {
