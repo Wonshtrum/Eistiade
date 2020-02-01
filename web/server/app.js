@@ -111,7 +111,7 @@ app.post('/submit', function(req, res) {
 	}
 	if (cmd < 2 && (notLogged(req, res) || illegalStr('Name', arg0, res))) return;
 	let args = [ arg0, arg1, arg2 ];
-	let stmt = sql.format('INSERT INTO Requests(cmd, arg0, arg1, arg2, author) VALUES(?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, req.session.username]);
+	let stmt = sql.format('INSERT INTO Requests(cmd, arg0, arg1, arg2, author, id) VALUES(?, ?, ?, ?, ?, ?)', [cmd, arg0, arg1, arg2, req.session.username]);
 	listenDb(stmt, cmd, args, data => res.send(data));
 })
 app.get('/dbCore', function(req, res) {
@@ -146,7 +146,12 @@ console.log('Server started.');
 const config = JSON.parse(fs.readFileSync(__db + '/secret.json'));
 const db = sql.createConnection(config)
 
-const callCore = () => request.post('http://localhost:'+config.linkPort+'/event');
+const callCore = id => request.post('http://localhost:'+config.linkPort+'/event', (err, data) => {
+	if (err) {
+		console.error(err);
+		endRequest(id)
+	}
+});
 
 app.post('/result', function(req, res) {
 	endRequest(req.body.id);
@@ -170,6 +175,7 @@ const endRequest = function(id) {
 			data.args = req.args;
 			req.callback(data);
 		} else {
+			console.log('TERMINATED', id);
 			req.callback({exitCode: 2, field0: 'Sorry something wen\'t wrong on the server side...'});
 		}
 		delete listenDb.queue[id];
@@ -177,14 +183,13 @@ const endRequest = function(id) {
 }
 
 const listenDb = function(inStmt, cmd, args, callback, outStmt) {
-	db.query(inStmt, function(err) {
+	let id = ++listenDb.id;
+	db.query(inStmt, [id], function(err) {
 		if (!err) {
-			let id = ++listenDb.id;
 			outStmt = outStmt || 'SELECT * FROM Results WHERE id = '+id;
-			let timeout = setTimeout(() => { console.log('TIMEOUT FOR '+id); endRequest(id); }, config.timeout);
+			let timeout = setTimeout(() => endRequest(id), config.timeout);
 			listenDb.queue[id] = {id:id, stmt:outStmt, cmd:cmd, args:args, callback:callback, timeout:timeout};
-			callCore();
-			//try { callCore(); } catch { console.log('Connection impossible'); }
+			callCore(id);
 		}
 	});
 }

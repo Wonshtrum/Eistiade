@@ -82,5 +82,5 @@ workList = [Send, Set, Fight]
 for i, w in enumerate(workList):
     w.id = i
 def work(line):
-    requestId, workId, arg0, arg1, arg2, author = line
+    requestId, workId, arg0, arg1, arg2, author, state = line
     return workList[workId](arg0, arg1, arg2, author)

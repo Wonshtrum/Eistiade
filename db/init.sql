@@ -3,12 +3,13 @@ CREATE DATABASE Eistiade;
 USE Eistiade;
 
 CREATE TABLE Requests (
-	id INTEGER PRIMARY KEY AUTO_INCREMENT,
+	id INTEGER PRIMARY KEY,
 	cmd INTEGER,
 	arg0 TEXT,
 	arg1 TEXT,
 	arg2 TEXT,
-	author TEXT);
+	author TEXT,
+	state INTEGER DEFAULT 0);
 
 CREATE TABLE Results (
 	id INTEGER PRIMARY KEY,

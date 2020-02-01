@@ -37,6 +37,7 @@ class Player:
         return self.proc.poll()
     def kill(self, collectLogs=False):
         self.proc.terminate()
+        self.proc.wait()
         if collectLogs:
             self.logEntry(''.join(thread(1, self.error, otherwise='')()))
 

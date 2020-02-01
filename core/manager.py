@@ -42,10 +42,10 @@ class WorkerManager:
     def __init__(self, nbWorkers, db, callback):
         self.nbWorkers = nbWorkers
         self.workers = [Worker(workerId, db, callback) for workerId in range(nbWorkers)]
-    def newWork(self, requestId, work):
+    def newWork(self, line):
         for worker in self.workers:
             if not worker.working:
-                worker.give(requestId, work)
+                worker.give(line[0], work(line))
                 return True
         return False
 
@@ -61,8 +61,6 @@ class Poller:
         #Factory
         self.cursor.execute('SELECT MAX(id) AS id FROM Results')
         self.factory = WorkerManager(config['nbWorkers'], self.db, self.signalPoll)
-        self.lastIndex = self.cursor.fetchone()[0] or 0
-        print('LastRequest:', self.lastIndex)
         #Reload state
         self.reload()
         #Link with app
@@ -87,19 +85,18 @@ class Poller:
     def poll(self):
         while True:
             with lock:
-                self.cursor.execute('SELECT * FROM Requests WHERE id > %s', (self.lastIndex,))
+                self.cursor.execute('SELECT * FROM Requests WHERE state = 0')
                 lines = self.cursor.fetchall()
-            print("Polling[{}]".format(len(lines)))
-            for line in lines:
-                if self.factory.newWork(line[0], work(line)):
-                    self.lastIndex = line[0]
-                else:
-                    break
+                print("Polling[{}]".format(len(lines)))
+                for line in lines:
+                    if self.factory.newWork(line):
+                        self.cursor.execute('UPDATE Requests SET state = 1 WHERE id = %s', (line[0],))
             print('\nWAITING')
             workerId = self.resQueue.get()
             print('GOT', workerId, 'IN QUEUE')
             if workerId is not None:
                 worker = self.factory.workers[workerId]
+                worker.join()
                 callApp(url='http://localhost:8080/result', data={'id':worker.requestId})
                 worker.working = False
 

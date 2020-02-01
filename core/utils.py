@@ -20,6 +20,7 @@ def thread(maxTime, f, wait=False, otherwise=None):
         if wait:
             sleep(maxTime)
             proc.terminate()
+            proc.join()
             size = queue.qsize()
             if size:
                 res = []
@@ -39,6 +40,7 @@ def thread(maxTime, f, wait=False, otherwise=None):
                 return res
             except:
                 proc.terminate()
+                proc.join()
                 if otherwise is None:
                     raise ErrorWithMessage('Timeout!')
                 else:
