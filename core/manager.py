@@ -15,6 +15,7 @@ class Worker(Thread):
         self.id = workerId
         self.db = db
         self.working = False
+        self.user = None
         self.requestId = None
         self.work = None
         self.callback = callback
@@ -29,10 +30,11 @@ class Worker(Thread):
                     for stmt, inserts in zip(self.work.sql, self.work.inserts):
                         cursor.execute(stmt, inserts)
         self.callback(self.id)
-    def give(self, requestId, work):
+    def give(self, user, requestId, work):
         if self.working:
             raise Exception
         self.working = True
+        self.user = user
         self.requestId = requestId
         self.work = work
         Thread.__init__(self)
@@ -42,12 +44,24 @@ class WorkerManager:
     def __init__(self, nbWorkers, db, callback):
         self.nbWorkers = nbWorkers
         self.workers = [Worker(workerId, db, callback) for workerId in range(nbWorkers)]
+        self.users = set()
     def newWork(self, line):
+        user = line[5]
+        if user in self.users:
+            print("please", user, "be patient")
+            return False
         for worker in self.workers:
             if not worker.working:
-                worker.give(line[0], work(line))
+                worker.give(user, line[0], work(line))
+                self.users.add(user)
                 return True
         return False
+    def end(self, workerId):
+        worker = self.workers[workerId]
+        worker.working = False
+        worker.join()
+        self.users.remove(worker.user)
+        callApp(url='http://localhost:8080/result', data={'id':worker.requestId})
 
 class Poller:
     def __init__(self, config):
@@ -95,10 +109,7 @@ class Poller:
             workerId = self.resQueue.get()
             print('GOT', workerId, 'IN QUEUE')
             if workerId is not None:
-                worker = self.factory.workers[workerId]
-                worker.join()
-                callApp(url='http://localhost:8080/result', data={'id':worker.requestId})
-                worker.working = False
+                self.factory.end(workerId)
 
 if __name__ == '__main__':
     dbDir = '../db'
