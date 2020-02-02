@@ -32,15 +32,18 @@ class AI:
             return
 
         self.fileName = AI.specs[lang][0].format(name)
-        self.tmpDir = '{}/{}/tmp'.format(AI.rootDir, author)
+        self.baseDir = '{}/{}'.format(AI.rootDir, author)
+        self.tmpDir = '{}/tmp'.format(self.baseDir)
         self.tmpPath = '{}/{}'.format(self.tmpDir, self.fileName)
-        self.fileDir = '{}/{}/{}'.format(AI.rootDir, author, name)
+        self.fileDir = '{}/{}'.format(self.baseDir, name)
         self.filePath = '{}/{}'.format(self.fileDir, self.fileName)
     
     def register(self, create=True):
         if create:
             bash('mkdir -p {}'.format(self.fileDir))
             bash('mv {}/* {}'.format(self.tmpDir, self.fileDir))
+            bash('chmod 711 {}'.format(self.fileDir))
+            bash('chmod 700 {}'.format(self.baseDir))
         else:
             AI.collection[self.name] = self
             self.ready = True
@@ -62,7 +65,7 @@ class AI:
         compileCmd = AI.specs[self.lang][1].format(self.fileName, self.name)
         if compileCmd:
             bash('cd {} && {}'.format(self.tmpDir, compileCmd))
-        bash('chmod 777 {}/*'.format(self.tmpDir))
+        bash('chmod 744 {}/*'.format(self.tmpDir))
 
     def execute(self):
         executeCmd = AI.specs[self.lang][2].format(self.name)
