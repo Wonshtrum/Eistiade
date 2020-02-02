@@ -8,6 +8,7 @@ from multiprocessing import Queue
 from works import *
 from hook import *
 from requests import post as callApp
+from sys import exit
 
 lock = RLock()
 class Worker(Thread):
@@ -48,7 +49,6 @@ class WorkerManager:
     def newWork(self, line):
         user = line[5]
         if user in self.users:
-            print("please", user, "be patient")
             return False
         for worker in self.workers:
             if not worker.working:
@@ -61,7 +61,11 @@ class WorkerManager:
         worker.working = False
         worker.join()
         self.users.remove(worker.user)
-        callApp(url='http://localhost:8080/result', data={'id':worker.requestId})
+        try:
+            callApp(url='http://localhost:8080/result', data={'id':worker.requestId})
+        except Exception:
+            print('Please start app.js first')
+            exit(-1)
 
 class Poller:
     def __init__(self, config):
@@ -90,7 +94,7 @@ class Poller:
             author, name, lang, status = line
             ai = AI(author, name, lang, status)
             if status == 2:
-                ai.execute = lambda: 'python3 game/boss.py'
+                ai.execute = lambda: ('game', 'python3 boss.py')
             ai.register(False)
 
     def signalPoll(self, workerId = None):

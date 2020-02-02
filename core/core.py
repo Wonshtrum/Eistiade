@@ -4,13 +4,29 @@ from subprocess import Popen, PIPE
 from sys import argv
 from utils import *
 from game.game import Game
+from random import random
+from pwd import getpwnam as userInfo
+from os import setgid, setuid
+from signal import SIGTERM
+
+def demote(user='nobody'):
+    pw_record = userInfo(user)
+    user_name = pw_record.pw_name
+    user_home = pw_record.pw_dir
+    user_uid  = pw_record.pw_uid
+    user_gid  = pw_record.pw_gid
+    def wrapper():
+        setgid(user_gid)
+        setuid(user_uid)
+    return wrapper
 
 class Player:
     def __init__(self, ai, id):
         self.id = id
         self.baseName = ai.name
         self.name = 'IA[{}, {}]'.format(id, ai.name)
-        self.proc = Popen(ai.execute(), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        cwd, cmd = ai.execute()
+        self.proc = Popen(cmd, preexec_fn=demote(), cwd=cwd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.logHistory = []
     def send(self, data):
         self.proc.stdin.write('{}\n'.format(data).encode())
@@ -35,9 +51,11 @@ class Player:
             print(log, end='')
     def poll(self):
         return self.proc.poll()
-    def kill(self, collectLogs=False):
-        self.proc.terminate()
-        self.proc.wait()
+    def kill(self, collectLogs=False, t=0.1):
+        self.proc.kill()
+        sleep(t)
+        if self.proc.poll() is None:
+            print("PUTAIN DE PROGRAMME DE MERDE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", self.proc.pid)
         if collectLogs:
             self.logEntry(''.join(thread(1, self.error, otherwise='')()))
 
@@ -95,7 +113,6 @@ def fight(ai1, ai2):
                     print("//////////////////////////////////////////")
                     player.logEntry(str(E))
                 break
-
     player1.kill()
     player2.kill()
     return (game, player1, player2)

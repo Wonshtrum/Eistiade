@@ -15,7 +15,7 @@ def thread(maxTime, f, wait=False, otherwise=None):
             def process(queue, *args):
                 queue.put(f(*args))
         queue = Queue()
-        proc = Process(target = process, args=(queue, *args))
+        proc = Process(target = process, args=(queue, *args), daemon=True)
         proc.start()
         if wait:
             sleep(maxTime)
@@ -36,11 +36,16 @@ def thread(maxTime, f, wait=False, otherwise=None):
         else:
             try:
                 res = queue.get(timeout=maxTime)
-                proc.join()
+                proc.terminate()
+                proc.join(timeout=maxTime)
+                if proc.is_alive():
+                    print('Process', proc.pid, 'didn\t terminate properly')
                 return res
             except:
                 proc.terminate()
-                proc.join()
+                proc.join(timeout=maxTime)
+                if proc.is_alive():
+                    print('Process', proc.pid, 'didn\t terminate properly')
                 if otherwise is None:
                     raise ErrorWithMessage('Timeout!')
                 else:

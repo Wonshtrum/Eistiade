@@ -66,7 +66,7 @@ class AI:
 
     def execute(self):
         executeCmd = AI.specs[self.lang][2].format(self.name)
-        return 'cd {} && sudo -u nobody {}'.format(self.fileDir, executeCmd)
+        return (self.fileDir, executeCmd)
 
     @errorHandling
     def update(self, code):
