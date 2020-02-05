@@ -108,6 +108,13 @@ app.post('/submit', function(req, res) {
 			}
 		});
 		return;
+	} else if (cmd == 8) {
+		if (notLogged(req, res)) return;
+		db.query('SELECT * FROM Requests WHERE author = ? AND cmd = 0', [ req.session.username ], function(err, data) {
+			if (err) res.send({exitCode: 1, data: err});
+			else res.send({exitCode: 0, data: data});
+		});
+		return;
 	}
 	if (cmd < 2 && (notLogged(req, res) || illegalStr('Name', arg0, res))) return;
 	let args = [ arg0, arg1, arg2 ];

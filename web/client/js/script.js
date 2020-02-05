@@ -131,6 +131,11 @@ fight.onclick = e => {
 	});
 	loadPopup('#fightPopup');
 };
+history.onclick = e => {
+	if (checkLogin()) return;
+	let data = [8];
+	ajax(data, e => console.log(e));
+};
 goFight.onclick = e => {
 	hidePopup();
 	let ai1 = fighter1.value.split(' ')[0];

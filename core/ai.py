@@ -65,7 +65,7 @@ class AI:
         compileCmd = AI.specs[self.lang][1].format(self.fileName, self.name)
         if compileCmd:
             bash('cd {} && {}'.format(self.tmpDir, compileCmd))
-        bash('chmod 744 {}/*'.format(self.tmpDir))
+        bash('chmod 755 {}/*'.format(self.tmpDir))
 
     def execute(self):
         executeCmd = AI.specs[self.lang][2].format(self.name)

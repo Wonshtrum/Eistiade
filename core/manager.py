@@ -26,7 +26,7 @@ class Worker(Thread):
         with lock:
             print('FINISH', self.requestId, time()-start)
             with self.db.cursor() as cursor:
-                cursor.execute('INSERT INTO Results VALUES(%s, %s, %s, %s, %s, %s)', (self.requestId, self.work.id, exitCode, field0, field1, field2))
+                cursor.execute('INSERT INTO Results(id, cmd, exitCode, field0, field1, field2) VALUES(%s, %s, %s, %s, %s, %s)', (self.requestId, self.work.id, exitCode, field0, field1, field2))
                 if self.work.sql and exitCode == 0:
                     for stmt, inserts in zip(self.work.sql, self.work.inserts):
                         cursor.execute(stmt, inserts)
@@ -91,7 +91,7 @@ class Poller:
         self.cursor.execute('SELECT * FROM Agents')
         for line in self.cursor.fetchall():
             print(line)
-            author, name, lang, status = line
+            author, name, lang, status, date = line
             ai = AI(author, name, lang, status)
             if status == 2:
                 ai.execute = lambda: ('game', 'python3 boss.py')

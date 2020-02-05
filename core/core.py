@@ -55,7 +55,7 @@ class Player:
         self.proc.kill()
         sleep(t)
         if self.proc.poll() is None:
-            print("PUTAIN DE PROGRAMME DE MERDE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", self.proc.pid)
+            print('Fight didn\'t end properly', self.proc.pid)
         if collectLogs:
             self.logEntry(''.join(thread(1, self.error, otherwise='')()))
 
@@ -66,8 +66,6 @@ class Player:
 def fight(ai1, ai2):
     player1 = Player(ai1, 1)
     player2 = Player(ai2, 2)
-    player1.send('1')
-    player2.send('2')
 
     game  = Game(ai1.name, ai2.name)
     error = 0
@@ -79,6 +77,8 @@ def fight(ai1, ai2):
             try:
                 player.newLogEntry('[Turn {}]: {} '.format(turn, player.baseName))
                 try:
+                    if turn == 1:
+                        player.send(player.id)
                     player.send(game.showBoard())
                     data = thread(1, player.listen)()
                     errorIf(player.poll() is not None, error=ErrorWithMessage('Program stopped...'))
