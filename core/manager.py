@@ -62,28 +62,31 @@ class WorkerManager:
         worker.join()
         self.users.remove(worker.user)
         try:
-            callApp(url='http://localhost:8080/result', data={'id':worker.requestId})
+            callApp(url='http://{}:{}/result'.format(config['web']['addr'], config['web']['port']), data={'id':worker.requestId})
         except Exception:
             print('Please start app.js first')
             exit(-1)
 
 class Poller:
     def __init__(self, config):
+        self.config = config
+        configDB = config['db']
+        configCore = config['core']
         #DB
-        self.db = sql.connect(host=config['host'],
-                user=config['user'],
-                passwd=config['password'],
-                db=config['database'],
+        self.db = sql.connect(host=configDB['host'],
+                user=configDB['user'],
+                passwd=configDB['password'],
+                db=configDB['database'],
                 autocommit=True)
         self.cursor = self.db.cursor()
         #Factory
         self.cursor.execute('SELECT MAX(id) AS id FROM Results')
-        self.factory = WorkerManager(config['nbWorkers'], self.db, self.signalPoll)
+        self.factory = WorkerManager(configCore['nbWorkers'], self.db, self.signalPoll)
         #Reload state
         self.reload()
         #Link with app
         self.resQueue = Queue()
-        self.listener = Listener(port=config['linkPort'])
+        self.listener = Listener(configCore['addr'], configCore['port'])
         self.listener.bind('/event', self.signalPoll)
         self.listener.start()
 
@@ -94,7 +97,7 @@ class Poller:
             author, name, lang, status, date = line
             ai = AI(author, name, lang, status)
             if status == 2:
-                ai.execute = lambda: ('game', 'python3 boss.py')
+                ai.execute = lambda: ('game', self.config['core']['boss'])
             ai.register(False)
 
     def signalPoll(self, workerId = None):

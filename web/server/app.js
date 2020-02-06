@@ -13,6 +13,8 @@ const __web      = __dirname.slice(0, __dirname.lastIndexOf('/'));
 const __root     = __web.slice(0, __web.lastIndexOf('/'));
 const __client   = __web + '/client';
 const __db       = __root + '/db';
+
+const config = JSON.parse(fs.readFileSync(__db + '/secret.json'));
 console.log('Root directory:', __root);
 
 
@@ -143,17 +145,16 @@ app.get('/dbUser', function(req, res) {
 });
 
 
-app.listen(8080);
+app.listen(config.web.port);
 console.log('Server started.');
 
 
 /////////////////////////////////////////////
 //                   DB                    //
 /////////////////////////////////////////////
-const config = JSON.parse(fs.readFileSync(__db + '/secret.json'));
-const db = sql.createConnection(config)
+const db = sql.createConnection(config.db)
 
-const callCore = id => request.post('http://localhost:'+config.linkPort+'/event', (err, data) => {
+const callCore = id => request.post('http://'+config.core.addr+':'+config.core.port+'/event', (err, data) => {
 	if (err) {
 		console.error(err);
 		endRequest(id)
@@ -194,7 +195,7 @@ const listenDb = function(inStmt, cmd, args, callback, outStmt) {
 	db.query(inStmt, [id], function(err) {
 		if (!err) {
 			outStmt = outStmt || 'SELECT * FROM Results WHERE id = '+id;
-			let timeout = setTimeout(() => endRequest(id), config.timeout);
+			let timeout = setTimeout(() => endRequest(id), config.web.timeout);
 			listenDb.queue[id] = {id:id, stmt:outStmt, cmd:cmd, args:args, callback:callback, timeout:timeout};
 			callCore(id);
 		}

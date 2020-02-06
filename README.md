@@ -4,13 +4,23 @@ Complete package to organise AI contests.
 Clone repository, create the Database in your MySQL server by sourcing the file `db/init.sql` and create the file `db/secret.json` by following the format:
 ```Json
 {
-    "host":"YOUR_HOST",
-    "user":"YOUR_USER",
-    "password":"YOUR_PASSWORD",
-    "database":"Eistiade",
-    "nbWorkers":8,
-    "timeout":10,
-    "linkPort":65000
+	"db":{
+		"host":"DB_HOST",
+		"user":"DB_USER",
+		"password":"DB_PASSWORD",
+		"database":"Eistiade"
+	},
+	"core":{
+		"addr":"CORE_HOST",
+		"port":CORE_PORT,
+		"boss":"python3 boss.py",
+		"nbWorkers":8
+	},
+	"web":{
+		"addr":"WEB_HOST",
+		"port":WEB_PORT,
+		"timeout":10000
+	}
 }
 ```
 The game played can be modified by changing the file `core/game.py` and following the example given. If necessary change the fight loop of the `core/core.py` file.
