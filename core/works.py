@@ -44,7 +44,7 @@ class Send(Work):
         return [exitCode, logs]
 
 class Set(Work):
-    sql = ['UPDATE Agents SET status = 0',
+    sql = ['UPDATE Agents SET status = 0 WHERE author = %s',
             'INSERT INTO Agents(author, name, lang, status) VALUES(%s, %s, %s, %s)']
     def __init__(self, arg0, arg1, arg2, author):
         self.name = arg0
@@ -56,7 +56,7 @@ class Set(Work):
             return [1, 'AI, {}, has already been submitted by {}.\nPlease name your AI differently.'.format(ai.name, ai.author)]
         if not ai.compiled:
             return [1, 'AI, {}, has not compiled properly.\nPlease check your code before submitting it.'.format(ai.name)]
-        self.inserts = [(), (ai.author, ai.name, ai.lang, 1)]
+        self.inserts = [(ai.author), (ai.author, ai.name, ai.lang, 1)]
         ai.ready = True
         return [0]
 

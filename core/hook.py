@@ -12,6 +12,8 @@ class Handler(BaseHTTPRequestHandler):
             func, args, kwargs = self.hooks[self.path]
             func(*args, **kwargs)
         self._set_headers()
+    def do_GET(self):
+        self.do_POST()
 
     def bind(path, hook, *args, **kwargs):
         Handler.hooks[path] = [hook, args, kwargs]

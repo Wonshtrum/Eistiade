@@ -10,7 +10,7 @@ force = len(argv)>1 and argv[1] == '-f'
 if force: system('sudo rm -rf ../players/*')
 
 with open('secret.json') as f:
-    config = json(f)
+    config = json(f)['db']
 
 db = sql.connect(host=config['host'],
         user=config['user'],

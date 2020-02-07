@@ -39,13 +39,13 @@ def thread(maxTime, f, wait=False, otherwise=None):
                 proc.terminate()
                 proc.join(timeout=maxTime)
                 if proc.is_alive():
-                    print('Process', proc.pid, 'didn\t terminate properly')
+                    print('Process', proc.pid, 'didn\'t terminate properly')
                 return res
             except:
                 proc.terminate()
                 proc.join(timeout=maxTime)
                 if proc.is_alive():
-                    print('Process', proc.pid, 'didn\t terminate properly')
+                    print('Process', proc.pid, 'didn\'t terminate properly after timeout')
                 if otherwise is None:
                     raise ErrorWithMessage('Timeout!')
                 else:

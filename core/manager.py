@@ -5,14 +5,16 @@ from json import load as fromJson
 from time import sleep, time
 from threading import Thread, RLock
 from multiprocessing import Queue
-from works import *
-from hook import *
 from requests import post as callApp
 from sys import exit
 
+from works import *
+from hook import *
+from tournament import *
+
 lock = RLock()
 class Worker(Thread):
-    def __init__(self, workerId, db, callback):
+    def __init__(self, workerId, db, callback, signalEnd):
         self.id = workerId
         self.db = db
         self.working = False
@@ -20,6 +22,7 @@ class Worker(Thread):
         self.requestId = None
         self.work = None
         self.callback = callback
+        self.signalEnd = signalEnd
     def run(self):
         start = time()
         exitCode, field0, field1, field2 = self.work.process()
@@ -30,7 +33,8 @@ class Worker(Thread):
                 if self.work.sql and exitCode == 0:
                     for stmt, inserts in zip(self.work.sql, self.work.inserts):
                         cursor.execute(stmt, inserts)
-        self.callback(self.id)
+        self.callback(self.requestId, exitCode, field0, field1, field2)
+        self.signalEnd(self.id)
     def give(self, user, requestId, work):
         if self.working:
             raise Exception
@@ -42,25 +46,26 @@ class Worker(Thread):
         self.start()
 
 class WorkerManager:
-    def __init__(self, nbWorkers, db, callback):
+    def __init__(self, nbWorkers, db, tournament, signalEnd):
+        self.tournament = tournament
         self.nbWorkers = nbWorkers
-        self.workers = [Worker(workerId, db, callback) for workerId in range(nbWorkers)]
+        self.workers = [Worker(workerId, db, tournament.callback, signalEnd) for workerId in range(nbWorkers)]
         self.users = set()
     def newWork(self, line):
         user = line[5]
-        if user in self.users:
+        if user != '$ROOT' and (self.tournament.running or user in self.users):
             return False
         for worker in self.workers:
             if not worker.working:
                 worker.give(user, line[0], work(line))
-                self.users.add(user)
+                if user != '$ROOT': self.users.add(user)
                 return True
         return False
     def end(self, workerId):
         worker = self.workers[workerId]
         worker.working = False
         worker.join()
-        self.users.remove(worker.user)
+        if worker.user != '$ROOT': self.users.remove(worker.user)
         try:
             callApp(url='http://{}:{}/result'.format(config['web']['addr'], config['web']['port']), data={'id':worker.requestId})
         except Exception:
@@ -69,6 +74,7 @@ class WorkerManager:
 
 class Poller:
     def __init__(self, config):
+        #Config
         self.config = config
         configDB = config['db']
         configCore = config['core']
@@ -79,15 +85,17 @@ class Poller:
                 db=configDB['database'],
                 autocommit=True)
         self.cursor = self.db.cursor()
-        #Factory
+        #Tournament and Worker Managers
+        self.tournament = Tournament(self)
         self.cursor.execute('SELECT MAX(id) AS id FROM Results')
-        self.factory = WorkerManager(configCore['nbWorkers'], self.db, self.signalPoll)
+        self.factory = WorkerManager(configCore['nbWorkers'], self.db, self.tournament, self.signalPoll)
         #Reload state
         self.reload()
         #Link with app
         self.resQueue = Queue()
         self.listener = Listener(configCore['addr'], configCore['port'])
         self.listener.bind('/event', self.signalPoll)
+        self.listener.bind('/tournament', self.tournament.start)
         self.listener.start()
 
     def reload(self):
@@ -108,7 +116,8 @@ class Poller:
             with lock:
                 self.cursor.execute('SELECT * FROM Requests WHERE state = 0')
                 lines = self.cursor.fetchall()
-                print("Polling[{}]".format(len(lines)))
+                pollSize = len(lines)
+                print("Polling[{}]".format(pollSize))
                 for line in lines:
                     if self.factory.newWork(line):
                         self.cursor.execute('UPDATE Requests SET state = 1 WHERE id = %s', (line[0],))
