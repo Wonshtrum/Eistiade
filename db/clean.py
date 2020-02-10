@@ -20,6 +20,7 @@ db = sql.connect(host=config['host'],
 with db.cursor() as cursor:
     cursor.execute('DELETE FROM Requests')
     cursor.execute('DELETE FROM Results')
+    cursor.execute('DELETE FROM Tournaments')
     if force:
         cursor.execute('DELETE FROM Agents')
         cursor.execute('INSERT INTO Agents(author, name, lang, status) VALUES(%s, %s, %s, %s)', ['$ROOT', 'Boss', 'unknown', 2])

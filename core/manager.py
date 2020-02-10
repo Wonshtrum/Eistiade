@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import pymysql as sql
-from json import load as fromJson
+from json import load as fromJson, dumps as toJson
 from time import sleep, time
 from threading import Thread, RLock
 from multiprocessing import Queue
@@ -110,6 +110,9 @@ class Poller:
 
     def signalPoll(self, workerId = None):
         self.resQueue.put(workerId)
+
+    def registerTournament(self, result):
+        self.cursor.execute('INSERT INTO Tournaments(result) VALUES(%s)', (toJson(result),))
 
     def poll(self):
         while True:

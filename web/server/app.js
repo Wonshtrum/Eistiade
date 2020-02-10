@@ -143,6 +143,11 @@ app.get('/dbUser', function(req, res) {
 		res.send(data);
 	});
 });
+app.get('/dbTournament', function(req, res) {
+	db.query('SELECT * FROM Tournaments', function(err, data) {
+		res.send(data);
+	});
+});
 
 
 app.listen(config.web.port);
