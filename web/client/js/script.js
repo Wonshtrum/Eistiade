@@ -29,6 +29,7 @@ const signUp = document.getElementById('signUp');
 const signUpName = document.getElementById('signUpName');
 const signUpPass = document.getElementById('signUpPass');
 const signUpError = document.getElementById('signUpError');
+const historic = document.getElementById('historic');
 
 /*==============================================*/
 /*              Set up ace editor               */
@@ -134,7 +135,22 @@ fight.onclick = e => {
 history.onclick = e => {
 	if (checkLogin()) return;
 	let data = [8];
-	ajax(data, e => console.log(e));
+	ajax(data, e => {
+		if (e.exitCode === 0) {
+			historic.innerHTML = '';
+			let options = {class: 'margin-1 padding-1 in-light hov-opac-2'};
+			let lastContent = "";
+			e.data.forEach(commit => {
+				if (lastContent !== commit.arg2) {
+					lastContent = commit.arg2;
+					let div = createNode('div', [ commit.arg0 ], options);
+					div.onclick = e => editor.session.setValue(commit.arg2);
+					historic.appendChild(div);
+				}
+			});
+		}
+		loadPopup('#historyPopup');
+	});
 };
 goFight.onclick = e => {
 	hidePopup();

@@ -1,4 +1,5 @@
 from ai import AI
+from json import dumps as toJson
 
 class Tournament:
     def __init__(self, poller, nbMatch=3):
@@ -19,7 +20,8 @@ class Tournament:
         self.running = True
         self.stopping = False
         self.startId = self.requestId
-        self.competitors = competitors = [ai.name for ai in AI.collection.values() if ai.ready]
+        self.poller.cursor.execute('SELECT name, author FROM Agents WHERE status > 0')
+        self.competitors = competitors = [ai[0] for ai in self.poller.cursor.fetchall()]
         self.nbCompetitors = nb = len(competitors)
         self.grid = [[[] for i in range(nb)] for j in range(nb)]
         print(competitors)
@@ -53,7 +55,7 @@ class Tournament:
                         print(ai1, 'vs', ai2, ':', winner)
                         res[winner] += 1
         print(res)
-        self.poller.registerTournament(res)
+        self.poller.cursor.execute('INSERT INTO Tournaments(result) VALUES(%s)', (toJson(res),))
         self.poller.signalPoll()
         self.running = False
 
@@ -66,6 +68,7 @@ class Tournament:
         col = requestId % (self.nbCompetitors-1)
         if row <= col:
             col += 1
-        self.grid[row][col].append(int(field2[-3])-1)
+        _, _, data = field2.partition('"id": ')
+        self.grid[row][col].append(int(data[0])-1)
         if self.remaining == 0:
             self.end()

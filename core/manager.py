@@ -111,9 +111,6 @@ class Poller:
     def signalPoll(self, workerId = None):
         self.resQueue.put(workerId)
 
-    def registerTournament(self, result):
-        self.cursor.execute('INSERT INTO Tournaments(result) VALUES(%s)', (toJson(result),))
-
     def poll(self):
         while True:
             with lock:
