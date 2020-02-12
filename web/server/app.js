@@ -103,16 +103,20 @@ app.post('/submit', function(req, res) {
 		return;
 	} else if (cmd == 6) {
 		db.query('SELECT * FROM Agents', function(err, data) {
-			if (!err) {
-				res.send({exitCode: 0, data: data});
-			} else {
-				res.send({exitCode: 1});
-			}
+			if (err) res.send({exitCode: 1, data: err});
+			else res.send({exitCode: 0, data: data});
 		});
 		return;
 	} else if (cmd == 8) {
 		if (notLogged(req, res)) return;
 		db.query('SELECT * FROM Requests WHERE author = ? AND cmd = 0', [ req.session.username ], function(err, data) {
+			if (err) res.send({exitCode: 1, data: err});
+			else res.send({exitCode: 0, data: data});
+		});
+		return;
+	} else if (cmd == 9) {
+		db.query('SELECT * FROM Tournaments', function(err, data) {
+			data.forEach(line => line.result = JSON.parse(line.result));
 			if (err) res.send({exitCode: 1, data: err});
 			else res.send({exitCode: 0, data: data});
 		});

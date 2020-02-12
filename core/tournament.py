@@ -17,25 +17,26 @@ class Tournament:
     def start(self):
         if self.running:
             return
-        self.running = True
-        self.stopping = False
-        self.startId = self.requestId
-        self.poller.cursor.execute('SELECT name, author FROM Agents WHERE status > 0')
-        self.competitors = competitors = [ai[0] for ai in self.poller.cursor.fetchall()]
-        self.nbCompetitors = nb = len(competitors)
-        self.grid = [[[] for i in range(nb)] for j in range(nb)]
-        print(competitors)
-        self.remaining = 0
-        for ai1 in competitors:
-            for ai2 in competitors:
-                if ai1 is not ai2:
-                    for _ in range(self.nbMatch):
-                        self.poller.cursor.execute('INSERT INTO Requests(cmd, arg0, arg1, arg2, author, id) VALUES(%s, %s,%s, %s, %s, %s)', (2, ai1, ai2, None, '$ROOT', self.requestId))
-                        print('match', self.requestId, ':', ai1, 'vs', ai2)
-                        self.requestId -= 1
-                        self.remaining += 1
-        print('[-- START TOURNAMENT --]')
-        self.poller.signalPoll()
+        with self.poller.lock:
+            self.running = True
+            self.stopping = False
+            self.startId = self.requestId
+            self.poller.cursor.execute('SELECT name, author FROM Agents WHERE status > 0')
+            self.competitors = competitors = self.poller.cursor.fetchall()
+            self.nbCompetitors = nb = len(competitors)
+            self.grid = [[[] for i in range(nb)] for j in range(nb)]
+            print(competitors)
+            self.remaining = 0
+            for ai1 in competitors:
+                for ai2 in competitors:
+                    if ai1 is not ai2:
+                        for _ in range(self.nbMatch):
+                            self.poller.cursor.execute('INSERT INTO Requests(cmd, arg0, arg1, arg2, author, id) VALUES(%s, %s,%s, %s, %s, %s)', (2, ai1[0], ai2[0], None, '$ROOT', self.requestId))
+                            print('match', self.requestId, ':', ai1, 'vs', ai2)
+                            self.requestId -= 1
+                            self.remaining += 1
+            print('[-- START TOURNAMENT --]')
+            self.poller.signalPoll()
 
     def end(self):
         if self.stopping or not self.running:
@@ -44,7 +45,7 @@ class Tournament:
         print('[-- END TOURNAMENT --]')
         for l in self.grid:
             print(l)
-        res = {ai:0 for ai in self.competitors}
+        res = {ai[1]: [0, ai[0]] for ai in self.competitors}
         for row, line in enumerate(self.grid):
             for col, match in enumerate(line):
                 ai1 = self.competitors[row]
@@ -53,9 +54,10 @@ class Tournament:
                     if ai1 != ai2:
                         winner = ai1 if _ == 0 else ai2
                         print(ai1, 'vs', ai2, ':', winner)
-                        res[winner] += 1
+                        res[winner[1]][0] += 1
         print(res)
-        self.poller.cursor.execute('INSERT INTO Tournaments(result) VALUES(%s)', (toJson(res),))
+        with self.poller.lock:
+            self.poller.cursor.execute('INSERT INTO Tournaments(result) VALUES(%s)', (toJson(res),))
         self.poller.signalPoll()
         self.running = False
 

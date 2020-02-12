@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import pymysql as sql
-from json import load as fromJson, dumps as toJson
+from json import load as fromJson
 from time import sleep, time
 from threading import Thread, RLock
 from multiprocessing import Queue
@@ -12,11 +12,11 @@ from works import *
 from hook import *
 from tournament import *
 
-lock = RLock()
 class Worker(Thread):
-    def __init__(self, workerId, db, callback, signalEnd):
+    def __init__(self, workerId, db, lock, callback, signalEnd):
         self.id = workerId
         self.db = db
+        self.lock = lock
         self.working = False
         self.user = None
         self.requestId = None
@@ -26,7 +26,7 @@ class Worker(Thread):
     def run(self):
         start = time()
         exitCode, field0, field1, field2 = self.work.process()
-        with lock:
+        with self.lock:
             print('FINISH', self.requestId, time()-start)
             with self.db.cursor() as cursor:
                 cursor.execute('INSERT INTO Results(id, cmd, exitCode, field0, field1, field2) VALUES(%s, %s, %s, %s, %s, %s)', (self.requestId, self.work.id, exitCode, field0, field1, field2))
@@ -46,10 +46,10 @@ class Worker(Thread):
         self.start()
 
 class WorkerManager:
-    def __init__(self, nbWorkers, db, tournament, signalEnd):
+    def __init__(self, nbWorkers, db, lock, tournament, signalEnd):
         self.tournament = tournament
         self.nbWorkers = nbWorkers
-        self.workers = [Worker(workerId, db, tournament.callback, signalEnd) for workerId in range(nbWorkers)]
+        self.workers = [Worker(workerId, db, lock, tournament.callback, signalEnd) for workerId in range(nbWorkers)]
         self.users = set()
     def newWork(self, line):
         user = line[5]
@@ -73,7 +73,7 @@ class WorkerManager:
             exit(-1)
 
 class Poller:
-    def __init__(self, config):
+    def __init__(self, config, lock):
         #Config
         self.config = config
         configDB = config['db']
@@ -85,10 +85,11 @@ class Poller:
                 db=configDB['database'],
                 autocommit=True)
         self.cursor = self.db.cursor()
+        self.lock = lock
         #Tournament and Worker Managers
         self.tournament = Tournament(self)
         self.cursor.execute('SELECT MAX(id) AS id FROM Results')
-        self.factory = WorkerManager(configCore['nbWorkers'], self.db, self.tournament, self.signalPoll)
+        self.factory = WorkerManager(configCore['nbWorkers'], self.db, self.lock, self.tournament, self.signalPoll)
         #Reload state
         self.reload()
         #Link with app
@@ -113,7 +114,7 @@ class Poller:
 
     def poll(self):
         while True:
-            with lock:
+            with self.lock:
                 self.cursor.execute('SELECT * FROM Requests WHERE state = 0')
                 lines = self.cursor.fetchall()
                 pollSize = len(lines)
@@ -132,5 +133,5 @@ if __name__ == '__main__':
     dbConfigFile = '{}/secret.json'.format(dbDir)
     with open(dbConfigFile) as f:
         config = fromJson(f)
-    poller = Poller(config)
+    poller = Poller(config, RLock())
     poller.poll()

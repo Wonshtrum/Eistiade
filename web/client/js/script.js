@@ -152,6 +152,12 @@ history.onclick = e => {
 		loadPopup('#historyPopup');
 	});
 };
+board.onclick = e => {
+	let data = [9];
+	ajax(data, e => {
+		console.log(e);
+	});
+};
 goFight.onclick = e => {
 	hidePopup();
 	let ai1 = fighter1.value.split(' ')[0];
