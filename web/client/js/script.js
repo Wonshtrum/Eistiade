@@ -202,10 +202,13 @@ board.onclick = e => {
 				let ares = -1;
 				let res;
 				for (let competitor = 0 ; competitor < ranked.length ; competitor++) {
-					res = e.data[i].result[competitors[competitor]];
+					console.log(e.data[i].result, ranked[competitor]);
+					res = e.data[i].result[ranked[competitor]][0];
 					pos = res === ares ? pos : competitor+0.5;
 					graph[ranked[competitor]][i] = pos;
+					ares = res;
 				}
+				console.log(graph);
 				for (let competitor of ranked) {
 					graph[competitor][i] /= ranked.length+0.5;
 				}
@@ -221,6 +224,7 @@ board.onclick = e => {
 				let g = Math.floor(100+rng()*156);
 				let b = Math.floor(150+rng()*106);
 				let color = 'rgb(100,'+g+','+b+')';
+				if (competitor === '$ROOT') color = 'var(--lightFlashColor)';
 				boardGraph.appendChild(createNode('path', [], {d:coords, fill:'none', stroke:color, 'data-author':competitor}));
 				for (let x = 0 ; x < line.length ; x++) {
 					boardGraph.appendChild(createNode('circle', [], {cx:(x+.5)/X, cy:line[x], r:0.01, stroke:color, fill:'#fff'}));
