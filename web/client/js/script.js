@@ -30,6 +30,23 @@ const signUpName = document.getElementById('signUpName');
 const signUpPass = document.getElementById('signUpPass');
 const signUpError = document.getElementById('signUpError');
 const historic = document.getElementById('historic');
+const boardList = document.getElementById('boardList');
+const boardGraph = document.getElementById('boardGraph');
+
+/*==============================================*/
+/*                     PRNG                     */
+/*==============================================*/
+const prng = str => {
+	for(var i = 0, h = 1779033703 ^ str.length ; i < str.length ; i++) {
+		h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+		h = h << 13 | h >>> 19;
+	}
+	return function() {
+		h = Math.imul(h ^ h >>> 16, 2246822507);
+		h = Math.imul(h ^ h >>> 13, 3266489909);
+		return ((h ^= h >>> 16) >>> 0)/2**32;
+	}
+}
 
 /*==============================================*/
 /*              Set up ace editor               */
@@ -77,8 +94,9 @@ const ajax = (data, success) => {
 /*           Attach JS to HTML buttons          */
 /*==============================================*/
 const logState = {login: null, logged: false};
-const checkLogin = () => {
+const checkLogin = func => {
 	if (!logState.logged) {
+		signBeforeCallback = func;
 		loadPopup('#loginPopup');
 		return true;
 	}
@@ -93,7 +111,7 @@ ajax([7], e => {
 /*           Attach JS to HTML buttons          */
 /*==============================================*/
 test.onclick = e => {
-	if (checkLogin()) return;
+	if (checkLogin(test.onclick)) return;
 	let code = editor.getValue();
 	let lang = langSel.selectedOptions[0].getAttribute('name');
 	let name = nameIn.value;
@@ -102,7 +120,7 @@ test.onclick = e => {
 	ajax(data, e => log(e, bar));
 };
 submit.onclick = e => {
-	if (checkLogin()) return;
+	if (checkLogin(submit.onclick)) return;
 	let name = nameIn.value;
 	let data = [1, name];
 	let bar = loading();
@@ -113,8 +131,8 @@ fight.onclick = e => {
 		if (e.exitCode === 0) {
 			let ai1 = '';
 			let ai2 = '';
-			let i1 = -1;
-			let i2 = -1;
+			let i1 = 0;
+			let i2 = 0;
 			if (fighter1.selectedIndex >= 0) ai1 = fighter1.selectedOptions[0].value;
 			if (fighter2.selectedIndex >= 0) ai2 = fighter2.selectedOptions[0].value;
 			fighter1.innerHTML = '';
@@ -133,11 +151,14 @@ fight.onclick = e => {
 	loadPopup('#fightPopup');
 };
 history.onclick = e => {
-	if (checkLogin()) return;
+	if (checkLogin(history.onclick)) return;
 	let data = [8];
 	ajax(data, e => {
 		if (e.exitCode === 0) {
 			historic.innerHTML = '';
+			if (e.data.length === 0) {
+				historic.appendChild(createNode('div', [ 'vide.' ], {class: 'margin-1'}));
+			}
 			let options = {class: 'margin-1 padding-1 in-light hov-opac-2'};
 			let lastContent = "";
 			e.data.forEach(commit => {
@@ -152,10 +173,70 @@ history.onclick = e => {
 		loadPopup('#historyPopup');
 	});
 };
+rank = result => {
+	return Object.keys(result).sort((a, b) => result[a][0] < result[b][0] || (result[a][0] === result[b][0] && result[a][1] > result[b][1]))
+};
 board.onclick = e => {
 	let data = [9];
 	ajax(data, e => {
-		console.log(e);
+		if (e.exitCode === 0) {
+			boardGraph.innerHTML = "";
+			boardList.innerHTML = "";
+			let last = e.data[e.data.length-1].result;
+			let ai;
+			let rankedList = {};
+			for (let author of rank(last)) {
+				ai = last[author];
+				let node = createNode('div', [ `${author} (${ai[1]}) : ${ai[0]}` ], {class: 'in-white col-dark margin-1 padding-1 flex-0 flex-a big'});
+				boardList.appendChild(node);
+				rankedList[author] = node;
+			}
+			let competitors = Object.keys(last);
+			let graph = {};
+			for (let competitor of competitors) {
+				graph[competitor] = Array(e.data.length).fill(1);
+			}
+			for (let i = 0 ; i<e.data.length ; i++) {
+				let ranked = rank(e.data[i].result);
+				let pos = 0;
+				let ares = -1;
+				let res;
+				for (let competitor = 0 ; competitor < ranked.length ; competitor++) {
+					res = e.data[i].result[competitors[competitor]];
+					pos = res === ares ? pos : competitor+0.5;
+					graph[ranked[competitor]][i] = pos;
+				}
+				for (let competitor of ranked) {
+					graph[competitor][i] /= ranked.length+0.5;
+				}
+			}
+			let X = e.data.length;
+			for (let [competitor, line] of Object.entries(graph)) {
+				let coords = 'M';
+				for (let x = 0 ; x < line.length ; x++) {
+					coords += ' '+(x+.5)/X+','+line[x];
+					if (x === 0) coords += ' L'
+				}
+				let rng = prng(competitor);
+				let g = Math.floor(100+rng()*156);
+				let b = Math.floor(150+rng()*106);
+				let color = 'rgb(100,'+g+','+b+')';
+				boardGraph.appendChild(createNode('path', [], {d:coords, fill:'none', stroke:color, 'data-author':competitor}));
+				for (let x = 0 ; x < line.length ; x++) {
+					boardGraph.appendChild(createNode('circle', [], {cx:(x+.5)/X, cy:line[x], r:0.01, stroke:color, fill:'#fff'}));
+				}
+			}
+			boardGraph.innerHTML += "";
+			let curves = boardGraph.querySelectorAll('path');
+			for (let x = 0 ; x < curves.length ; x++) {
+				let curve = curves[x];
+				curve.author = rankedList[curve.dataset.author];
+				curve.author.style.backgroundColor = curve.getAttribute('stroke');
+				curve.onmouseenter = e => curve.author.classList.add('flash');
+				curve.onmouseleave = e => curve.author.classList.remove('flash');
+			}
+		}
+		loadPopup('#boardPopup');
 	});
 };
 goFight.onclick = e => {
@@ -195,11 +276,15 @@ previous.onclick = e => {
 login.onclick = e => {
 	loadPopup('#loginPopup');
 };
+
+let signBeforeCallback = false;
 login.deco = name => {
 	login.innerHTML = name;
 	logState.logged = true;
 	logState.login = name;
 	signUpName.value = signInName.value = '';
+	if (signBeforeCallback) signBeforeCallback();
+	signBeforeCallback = false;
 	let action = login.onclick;
 	login.onclick = e => ajax([5], a => {
 		login.innerHTML = 'connexion';

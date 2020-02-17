@@ -86,19 +86,19 @@
 				<div class='title big'>Connexion</div>
 				<div id='signInError' class='error margin-1'></div>
 				<div class='margin-1'>Pseudo</div>
-				<input id='signInName' class='margin-1'>
+				<input id='signInName' class='margin-1 available'>
 				<div class='margin-1'>Mot de passe</div>
-				<input id='signInPass' class='margin-1' type='password'/>
-				<button id='signIn' class='flash padding-1 margin-1'>OK</button>
+				<input id='signInPass' class='margin-1 available' type='password'/>
+				<button id='signIn' class='flash padding-1 margin-1 available'>OK</button>
 			</div>
 			<div class='panel'>
 				<div class='title big'>Inscription</div>
 				<div id='signUpError' class='error margin-1'></div>
 				<div class='margin-1'>Pseudo</div>
-				<input id='signUpName' class='margin-1'>
+				<input id='signUpName' class='margin-1 available'>
 				<div class='margin-1'>Mot de passe</div>
-				<input id='signUpPass' class='margin-1' type='password'/>
-				<button id='signUp' class='flash padding-1 margin-1'>OK</button>
+				<input id='signUpPass' class='margin-1 available' type='password'/>
+				<button id='signUp' class='flash padding-1 margin-1 available'>OK</button>
 			</div>
 		</div>
 		<!-- FIGHT POPUP -->
@@ -121,14 +121,24 @@
 						</div>
 					</div>
 				</div>
-				<button id='goFight' class='flash padding-1 margin-1'>OK</button>
+				<button id='goFight' class='flash padding-1 margin-1 available'>OK</button>
 			</div>
 		</div>
 		<!-- HISTORIC POPUP -->
-		<div id="historyPopup" class="popup in-dark padding-1 invisible">
-			<div class="panel">
-				<div class="title big margin-1">Historique</div>
-				<div id='historic' class="flex-1 down"></div>
+		<div id='historyPopup' class='popup in-dark padding-1 invisible'>
+			<div class='panel'>
+				<div class='title big margin-1'>Historique</div>
+				<div id='historic' class='flex-1 down'></div>
+			</div>
+		</div>
+		<!-- LEADERBOARD -->
+		<div id='boardPopup' class='popup in-dark padding-1 invisible'>
+			<div class='panel'>
+				<div class='title big margin-1'>LeaderBoard</div>
+				<div class='flex-1 flexIn'>
+					<div id='boardList' class='panel flex-0 flex-a'></div>
+					<svg id='boardGraph' class='panel' style='height:70vh;' viewBox="0 0 1 1"></div>
+				</div>
 			</div>
 		</div>
 	</div>

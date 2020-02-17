@@ -3,9 +3,11 @@ from json import dumps as toJson
 
 class Tournament:
     def __init__(self, poller, nbMatch=3):
+        poller.cursor.execute('SELECT min(id) FROM Requests')
         self.poller = poller
-        self.requestId = 0
-        self.startId = 0
+        self.startId = None
+        self.requestId = min(-1, poller.cursor.fetchone()[0]-1)
+        print(self.startId)
         self.running = False
         self.stopping = False
         self.competitors = None
