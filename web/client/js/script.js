@@ -182,6 +182,11 @@ board.onclick = e => {
 		if (e.exitCode === 0) {
 			boardGraph.innerHTML = "";
 			boardList.innerHTML = "";
+			if (e.data.length === 0) {
+				boardList.appendChild(createNode('div', [ 'Vide.' ], {class:'padding-1 margin-1'}));
+				loadPopup('#boardPopup');
+				return;
+			}
 			let last = e.data[e.data.length-1].result;
 			let ai;
 			let rankedList = {};
@@ -196,29 +201,37 @@ board.onclick = e => {
 			for (let competitor of competitors) {
 				graph[competitor] = Array(e.data.length).fill(1);
 			}
+			let maxList = Object.keys(last).length;
+			console.log(e.data);
 			for (let i = 0 ; i<e.data.length ; i++) {
 				let ranked = rank(e.data[i].result);
+				let delta = maxList-ranked.length;
 				let pos = 0;
 				let ares = -1;
 				let res;
 				for (let competitor = 0 ; competitor < ranked.length ; competitor++) {
-					console.log(e.data[i].result, ranked[competitor]);
+					console.log(e.data[i].result, ranked[competitor], graph);
 					res = e.data[i].result[ranked[competitor]][0];
-					pos = res === ares ? pos : competitor+0.5;
-					graph[ranked[competitor]][i] = pos;
+					pos = res === ares ? pos+0.1 : competitor+0.5;
+					graph[ranked[competitor]][i] = pos+delta;
 					ares = res;
 				}
 				console.log(graph);
 				for (let competitor of ranked) {
-					graph[competitor][i] /= ranked.length+0.5;
+					graph[competitor][i] /= maxList;
 				}
 			}
 			let X = e.data.length;
 			for (let [competitor, line] of Object.entries(graph)) {
 				let coords = 'M';
+				let first = true;
 				for (let x = 0 ; x < line.length ; x++) {
+					if (line[x] === 1) continue;
 					coords += ' '+(x+.5)/X+','+line[x];
-					if (x === 0) coords += ' L'
+					if (first) {
+						first = false;
+						coords += ' L';
+					}
 				}
 				let rng = prng(competitor);
 				let g = Math.floor(100+rng()*156);
@@ -227,7 +240,7 @@ board.onclick = e => {
 				if (competitor === '$ROOT') color = 'var(--lightFlashColor)';
 				boardGraph.appendChild(createNode('path', [], {d:coords, fill:'none', stroke:color, 'data-author':competitor}));
 				for (let x = 0 ; x < line.length ; x++) {
-					boardGraph.appendChild(createNode('circle', [], {cx:(x+.5)/X, cy:line[x], r:0.01, stroke:color, fill:'#fff'}));
+					if (line[x] !== 1) boardGraph.appendChild(createNode('circle', [], {cx:(x+.5)/X, cy:line[x], r:0.01, stroke:color, fill:'#fff'}));
 				}
 			}
 			boardGraph.innerHTML += "";

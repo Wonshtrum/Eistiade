@@ -1,5 +1,5 @@
 DROP DATABASE IF EXISTS Eistiade;
-CREATE DATABASE Eistiade;
+CREATE DATABASE Eistiade COLLATE utf8_bin;
 USE Eistiade;
 
 CREATE TABLE Requests (
