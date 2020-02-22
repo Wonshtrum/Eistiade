@@ -1,0 +1,80 @@
+#header {
+	color: white;
+	line-height: var(--titleW);
+	margin-bottom: calc(-2 * var(--margin));
+	padding-left: 1em;
+}
+#header > .right {
+	position: absolute;
+	right: calc(2 * var(--margin));
+}
+
+#langConta {
+	margin-right: calc(-1 * var(--margin));
+}
+
+#nameIn {
+	margin-left: 1em;
+}
+
+#editor {
+	font-size: 90%;
+}
+
+.log .line, .log .line div {
+	/*transition: background .2s, color .2s;*/
+}
+
+.debug { 
+	background: var(--debugColor);
+	font-weight: 700;
+}
+
+#menu > .flexIn {
+	height: 100px;
+	line-height: 100px;
+	text-align: center;
+}
+
+#logs {
+	scroll-behavior: smooth;
+}
+
+canvas {
+	width: 100%;
+	/*image-rendering: crisp-edges;*/
+}
+
+.icon {
+	position: absolute;
+	width: 10%;
+	padding-top: 10%;
+	top: 0;
+}
+#rightIcon { right: 0; }
+#leftIcon { left: 0; }
+
+#progress {
+	position: absolute;
+	height: 100%;
+	width: 50%;
+	transition: width .5s;
+}
+#steps { z-index: 1; }
+#steps div:hover {
+	background: white;
+	opacity: 50%;
+}
+
+#fightPopup .select {
+	min-width: 10em;
+}
+
+#play { margin: 0 1em; }
+.arrow.pause {
+	height: 2em;
+	width: 0.75em;
+	border-width: 0 0.625em !important;
+	border-style: solid !important;
+	border-color: transparent var(--whiteColor) !important;
+}
