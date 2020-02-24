@@ -7,7 +7,7 @@ from sys import argv
 
 force = len(argv)>1 and argv[1] == '-f'
 
-if force: system('sudo rm -rf ../players/*')
+if force: system('rm -rf ../players/*')
 
 with open('secret.json') as f:
     config = json(f)['db']

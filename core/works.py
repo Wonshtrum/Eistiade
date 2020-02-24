@@ -83,4 +83,9 @@ for i, w in enumerate(workList):
     w.id = i
 def work(line):
     requestId, workId, arg0, arg1, arg2, author, state, date = line
-    return workList[workId](arg0, arg1, arg2, author)
+    if workId not in range(len(workList)):
+        return None
+    try:
+        return workList[workId](arg0, arg1, arg2, author)
+    except Exception:
+        return None

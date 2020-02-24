@@ -193,7 +193,7 @@ const endRequest = function(id) {
 			req.callback(data);
 		} else {
 			console.log('TERMINATED', id);
-			req.callback({exitCode: 2, field0: 'Sorry something wen\'t wrong on the server side...'});
+			req.callback({exitCode: 2, field0: 'Sorry, something went wrong on the server side'});
 		}
 		delete listenDb.queue[id];
 	});

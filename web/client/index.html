@@ -46,6 +46,40 @@
 							<span id='play' class='arrow right out-white out-w4 out-h2 hov-opac-2'></span>
 							<span id='next' class='arrow right hollow out-white out-w2 hov-opac-2'></span>
 						</div>
+<pre style="word-wrap:break-word;white-space:break-spaces;line-height:1.8em;" class="margin-1 padding-1 log">
+<h1>Conventions</h1>Tous les noms (IA et utilisateurs) et mots de passe sont de longueur 4 ou plus et ne doivent contenir que des caractères alphanumériques.
+Lors d'un test, votre IA sera compilée, puis si la compilation s'est passée sans erreur, votre IA combattra l'IA de base du site (Boss). Cela vous permet de vérifier que l'IA se lance correctement et que son comportement est relativement normal. Pour la faire combattre contre d'autres IA et participer à des tournois, vous devez soumettre votre IA.
+Vous pouvez tester une IA autant que souhaité, mais attention, vous ne pouvez pas supprimer ou modifier une IA soumise !
+Vous pouvez créer autant d'IA que vous le souhaitez (dans les limites du raisonnable).
+
+<h1>Communication</h1>Récupérer les informations avec l'entrée standard (input(), std::cin...)
+Envoyer vos informations sur la sortie standard (print(), std::cout...)
+Vous pouvez faire du debuggage en utilisant la sortie standard d'erreur (print("msg", file=sys.stderr), std::cerr...)
+
+<h1>Données</h1>Le serveur vous envoie d'abord un entier (1 ou 2) suivant que vous êtes le premier (O) ou deuxieme (X) joueur.
+Puis à chaque début de tour, le serveur envoie six lignes représentant l'état du puissance 4. Chaque ligne est composée de 7 symboles (O, X ou .) séparés par des espaces
+Comme cela :
+. . . . . . .
+. X . . . . .
+. X . O . X .
+O X . X O O O
+O O X X O O O
+X X O X O X X
+
+A la fin de chaque tour, vous devez indiquer dans quelle colonne souhaite jouer votre IA. Pour cela envoyer un entier entre 0 et 6 sur la sortie standard de votre programme.
+
+<h1>Exemple</h1>from sys import stderr
+#initialisation
+my_id = input()
+while 1:
+	#pour chaque tour :
+	for numero_ligne in range(6):
+		ligne = input()
+		#debuggage
+		print(ligne, file=stderr)
+	#joue toujours dans la première colonn
+	print(0)
+</pre>
 					</div>
 				</div>
 				<div class='cont flex-2 min'>

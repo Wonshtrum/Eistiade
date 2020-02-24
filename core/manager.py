@@ -57,8 +57,10 @@ class WorkerManager:
             return False
         for worker in self.workers:
             if not worker.working:
-                worker.give(user, line[0], work(line))
-                if user != '$ROOT': self.users.add(user)
+                task = work(line)
+                if task:
+                    worker.give(user, line[0], task)
+                    if user != '$ROOT': self.users.add(user)
                 return True
         return False
     def end(self, workerId):

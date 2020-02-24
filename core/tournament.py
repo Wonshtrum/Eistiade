@@ -6,8 +6,8 @@ class Tournament:
         poller.cursor.execute('SELECT min(id) FROM Requests')
         self.poller = poller
         self.startId = None
-        self.requestId = min(-1, poller.cursor.fetchone()[0]-1)
-        print(self.startId)
+        self.requestId = min(-1, (poller.cursor.fetchone()[0] or 0)-1)
+        print(self.requestId)
         self.running = False
         self.stopping = False
         self.competitors = None

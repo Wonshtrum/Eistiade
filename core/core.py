@@ -6,8 +6,12 @@ from utils import *
 from game.game import Game
 from random import random
 from pwd import getpwnam as userInfo
-from os import setgid, setuid
+from os import setgid, setuid, setsid, killpg, getpgid
 from signal import SIGTERM
+import resource as rsrc
+
+def rlimit(resource, limit):
+    rsrc.setrlimit(resource, (limit, limit))
 
 def demote(user='nobody'):
     pw_record = userInfo(user)
@@ -15,9 +19,16 @@ def demote(user='nobody'):
     user_home = pw_record.pw_dir
     user_uid  = pw_record.pw_uid
     user_gid  = pw_record.pw_gid
-    def wrapper():
+    def wrapper(*args, **kwargs):
+        setsid(*args, **kwargs)
         setgid(user_gid)
         setuid(user_uid)
+        rlimit(rsrc.RLIMIT_CPU, 60)
+        rlimit(rsrc.RLIMIT_FSIZE, 0)
+        #rlimit(rsrc.RLIMIT_DATA, 512)
+        #rlimit(rsrc.RLIMIT_STACK, 128)
+        rlimit(rsrc.RLIMIT_NPROC, 2)
+        #rlimit(rsrc.RLIMIT_NOFILE, 0)
     return wrapper
 
 class Player:
@@ -26,7 +37,8 @@ class Player:
         self.baseName = ai.name
         self.name = 'IA[{}, {}]'.format(id, ai.name)
         cwd, cmd = ai.execute()
-        self.proc = Popen(cmd, preexec_fn=demote(), cwd=cwd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self.killed = False
+        self.proc = Popen(cmd, preexec_fn=demote('usr{}'.format(id)), cwd=cwd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.logHistory = []
     def send(self, data):
         self.proc.stdin.write('{}\n'.format(data).encode())
@@ -52,12 +64,21 @@ class Player:
     def poll(self):
         return self.proc.poll()
     def kill(self, collectLogs=False, t=0.1):
-        self.proc.kill()
-        sleep(t)
-        if self.proc.poll() is None:
-            print('Fight didn\'t end properly', self.proc.pid)
-        if collectLogs:
-            self.logEntry(''.join(thread(1, self.error, otherwise='')()))
+        if self.killed: return
+        try:
+            print("PGID", getpgid(self.proc.pid))
+            killpg(getpgid(self.proc.pid), SIGTERM)
+            self.killed = True
+            print(self.baseName, self.id, self.proc.poll())
+            sleep(t)
+            print(self.baseName, self.id, self.proc.poll())
+            if self.proc.poll() is None:
+                print('Fight didn\'t end properly', self.proc.pid)
+        except Exception as E:
+            print(E)
+        finally:
+            if collectLogs:
+                self.logEntry(''.join(thread(1, self.error, otherwise='')()))
 
 
 #========================================#
