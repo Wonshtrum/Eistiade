@@ -39,3 +39,7 @@ To start a new fresh contest, you can clear all datas by running the following l
 cd db/
 sudo python3 clean.py
 ```
+
+### Demo
+Heavily inspired from [CodinGame](https://www.codingame.com/).
+![demo](demo.png)

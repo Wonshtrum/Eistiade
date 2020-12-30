@@ -26,8 +26,9 @@ def demote(user='nobody'):
         rlimit(rsrc.RLIMIT_CPU, 60)
         rlimit(rsrc.RLIMIT_FSIZE, 0)
         #rlimit(rsrc.RLIMIT_DATA, 512)
-        #rlimit(rsrc.RLIMIT_STACK, 128)
-        rlimit(rsrc.RLIMIT_NPROC, 2)
+        rlimit(rsrc.RLIMIT_STACK, 8388608)
+        rlimit(rsrc.RLIMIT_AS, 8388608*2)
+        #rlimit(rsrc.RLIMIT_NPROC, 2)
         #rlimit(rsrc.RLIMIT_NOFILE, 0)
     return wrapper
 
@@ -38,7 +39,8 @@ class Player:
         self.name = 'IA[{}, {}]'.format(id, ai.name)
         cwd, cmd = ai.execute()
         self.killed = False
-        self.proc = Popen(cmd, preexec_fn=demote('usr{}'.format(id)), cwd=cwd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        usr = 'usr{}'.format(id)
+        self.proc = Popen(cmd, preexec_fn=demote(), cwd=cwd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.logHistory = []
     def send(self, data):
         self.proc.stdin.write('{}\n'.format(data).encode())
